@@ -1,0 +1,42 @@
+{
+  "name": "weimo",
+  "version": "0.1.0",
+  "private": true,
+  "description": "WeChat AI project report assistant that turns member updates into searchable Word reports.",
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/server.ts",
+    "build": "tsc",
+    "test": "npm run build && node --test tests/*.mjs",
+    "start": "node dist/src/server.js",
+    "backfill:file-descriptions": "node scripts/backfill-file-descriptions.mjs",
+    "prisma:generate": "prisma generate",
+    "prisma:migrate": "prisma migrate dev",
+    "prisma:push": "prisma db push",
+    "seed": "tsx prisma/seed.ts"
+  },
+  "dependencies": {
+    "@prisma/client": "^5.22.0",
+    "@types/qrcode": "^1.5.6",
+    "cors": "^2.8.5",
+    "docx": "^9.1.1",
+    "docxtemplater": "^3.51.0",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "mammoth": "^1.12.0",
+    "multer": "^2.2.0",
+    "openai": "^4.76.1",
+    "pizzip": "^3.1.7",
+    "qrcode": "^1.5.4",
+    "zod": "^3.24.1"
+  },
+  "devDependencies": {
+    "@types/cors": "^2.8.17",
+    "@types/express": "^5.0.0",
+    "@types/multer": "^2.1.0",
+    "@types/node": "^22.10.2",
+    "prisma": "^5.22.0",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.2"
+  }
+}

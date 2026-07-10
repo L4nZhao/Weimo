@@ -1,0 +1,4082 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="icon" type="image/svg+xml" href="/project-report-assistant-icon.svg" />
+    <title>项目报告助手</title>
+    <style>
+      :root {
+        color-scheme: light;
+        --bg: #f9f9f9;
+        --panel: #ffffff;
+        --line: #e6e6e6;
+        --text: #0d0d0d;
+        --muted: #8f8f8f;
+        --soft: #f2f2f2;
+        --hover: #ececec;
+        --input-bg: #ffffff;
+        --table-head: transparent;
+        --topbar-bg: var(--panel);
+        --toast-bg: #ffffff;
+        --preview-bg: #f9f9f9;
+        --doc-bg: #ffffff;
+        --dialog-preview-bg: #f9f9f9;
+        --shadow: rgba(0, 0, 0, 0.12);
+        --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.04);
+        --shadow-dialog: 0 8px 24px rgba(0, 0, 0, 0.12);
+        --brand: #0d0d0d;
+        --brand-dark: #2d2d2d;
+        --brand-soft: transparent;
+        --ok: #067647;
+        --ok-soft: transparent;
+        --danger: #d92d20;
+        --danger-hover: #d92d20;
+        --danger-soft: rgba(217, 45, 32, 0.08);
+        --focus: rgba(13, 13, 13, 0.35);
+        --focus-ring: rgba(13, 13, 13, 0.35);
+        --on-brand: #ffffff;
+        --on-danger: #ffffff;
+        --media-bg: #ffffff;
+        --status-idle: #8f8f8f;
+        --radius-s: 12px;
+        --radius-m: 12px;
+        --radius-l: 16px;
+        --font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC",
+          "Microsoft YaHei", sans-serif;
+      }
+
+      :root[data-theme="dark"] {
+        color-scheme: dark;
+        --bg: #212121;
+        --panel: #2b2b2b;
+        --line: #3f3f3f;
+        --text: #ececec;
+        --muted: #b4b4b4;
+        --soft: #2f2f2f;
+        --hover: #383838;
+        --input-bg: #2f2f2f;
+        --table-head: transparent;
+        --topbar-bg: var(--panel);
+        --toast-bg: #2b2b2b;
+        --preview-bg: #2f2f2f;
+        --doc-bg: #2f2f2f;
+        --dialog-preview-bg: #212121;
+        --shadow: rgba(0, 0, 0, 0.32);
+        --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.04);
+        --shadow-dialog: 0 8px 24px rgba(0, 0, 0, 0.12);
+        --brand: #ececec;
+        --brand-dark: #ffffff;
+        --brand-soft: transparent;
+        --ok: #47cd89;
+        --ok-soft: transparent;
+        --danger: #f97066;
+        --danger-hover: #f97066;
+        --danger-soft: rgba(249, 112, 102, 0.12);
+        --focus: rgba(236, 236, 236, 0.35);
+        --focus-ring: rgba(236, 236, 236, 0.35);
+        --on-brand: #0d0d0d;
+        --on-danger: #ffffff;
+        --media-bg: #ffffff;
+        --status-idle: #8f8f8f;
+        --radius-s: 12px;
+        --radius-m: 12px;
+        --radius-l: 16px;
+        --font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC",
+          "Microsoft YaHei", sans-serif;
+      }
+
+      :root[data-font="zh-cn"] {
+        --font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC",
+          "Microsoft YaHei", sans-serif;
+      }
+
+      :root[data-font="en"] {
+        --font-family: Inter, Roboto, Arial, Helvetica, sans-serif;
+      }
+
+      :root[data-font="zh-tw"] {
+        --font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang TC",
+          "Microsoft JhengHei", sans-serif;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--text);
+        font-family: var(--font-family);
+        font-size: 14px;
+        line-height: 1.65;
+        overflow-x: hidden;
+      }
+
+      button,
+      input,
+      textarea,
+      select {
+        font: inherit;
+      }
+
+      .app {
+        display: grid;
+        grid-template-columns: 232px minmax(0, 1fr);
+        min-height: 100vh;
+      }
+
+      .loading-bar {
+        position: fixed;
+        top: 0;
+        left: 0;
+        z-index: 20;
+        width: 0;
+        height: 2px;
+        background: var(--brand);
+        box-shadow: none;
+        opacity: 0;
+        transition:
+          width 120ms ease,
+          opacity 120ms ease;
+      }
+
+      .loading-bar.active {
+        width: 72%;
+        opacity: 1;
+      }
+
+      .loading-bar.done {
+        width: 100%;
+        opacity: 0;
+      }
+
+      .app-toast {
+        position: fixed;
+        left: 50%;
+        top: 50%;
+        z-index: 40;
+        min-width: 180px;
+        max-width: min(360px, calc(100vw - 32px));
+        border: 1px solid var(--line);
+        border-radius: var(--radius-l);
+        background: var(--toast-bg);
+        color: var(--text);
+        box-shadow: var(--shadow-card);
+        font-weight: 650;
+        line-height: 1.4;
+        opacity: 0;
+        padding: 10px 14px;
+        pointer-events: none;
+        text-align: center;
+        transform: translate(-50%, calc(-50% + 12px));
+        transition:
+          opacity 120ms ease,
+          transform 120ms ease;
+      }
+
+      .app-toast.show {
+        opacity: 1;
+        transform: translate(-50%, -50%);
+      }
+
+      .app-toast.error {
+        border-color: var(--danger);
+        color: var(--danger);
+      }
+
+      .sidebar {
+        position: sticky;
+        top: 0;
+        display: flex;
+        flex-direction: column;
+        height: 100vh;
+        border-right: 1px solid var(--line);
+        background: var(--panel);
+        padding: 16px 12px;
+      }
+
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        height: 42px;
+        padding: 0 10px 12px;
+        border-bottom: 1px solid var(--line);
+        font-weight: 650;
+        letter-spacing: 0;
+      }
+
+      .brand-mark {
+        width: 24px;
+        height: 24px;
+        border-radius: 8px;
+        object-fit: cover;
+      }
+
+      .nav {
+        display: grid;
+        gap: 4px;
+        padding-top: 12px;
+      }
+
+      .nav button {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        width: 100%;
+        min-height: 42px;
+        border: 0;
+        border-radius: 999px;
+        background: transparent;
+        color: var(--text);
+        cursor: pointer;
+        padding: 0 12px;
+        text-align: left;
+        transition:
+          background-color 120ms ease,
+          color 120ms ease;
+      }
+
+      .nav button:hover,
+      .nav button.active {
+        background: var(--hover);
+      }
+
+      .nav-icon {
+        display: grid;
+        width: 22px;
+        height: 22px;
+        place-items: center;
+        color: var(--muted);
+      }
+
+      .nav-icon svg,
+      .icon svg,
+      .icon-btn svg {
+        display: block;
+        width: 18px;
+        height: 18px;
+        stroke: currentColor;
+      }
+
+      .nav button.active .nav-icon,
+      .nav button:hover .nav-icon {
+        color: var(--text);
+      }
+
+      .sidebar-user {
+        position: relative;
+        margin-top: auto;
+        padding-top: 12px;
+        border-top: 1px solid var(--line);
+        --account-menu-width: 248px;
+        --account-submenu-width: 216px;
+      }
+
+      .user-card {
+        display: grid;
+        grid-template-columns: auto minmax(0, 1fr) auto;
+        align-items: center;
+        gap: 10px;
+        width: 100%;
+        min-height: 52px;
+        border: 0;
+        border-radius: var(--radius-l);
+        background: var(--soft);
+        padding: 8px 10px;
+        text-align: left;
+        transition:
+          background-color 120ms ease,
+          box-shadow 120ms ease;
+      }
+
+      .user-card:hover {
+        background: var(--hover);
+      }
+
+      .avatar {
+        display: grid;
+        width: 32px;
+        height: 32px;
+        place-items: center;
+        border-radius: 999px;
+        background: var(--brand);
+        color: var(--on-brand);
+        font-size: 12px;
+        font-weight: 800;
+      }
+
+      .user-name {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        font-weight: 750;
+        white-space: nowrap;
+      }
+
+      .user-role {
+        color: var(--muted);
+        font-size: 12px;
+        font-weight: 500;
+      }
+
+      .chevron {
+        color: var(--muted);
+        font-size: 18px;
+        transform: rotate(-90deg);
+      }
+
+      .user-menu {
+        position: absolute;
+        right: 0;
+        bottom: calc(100% + 6px);
+        left: 0;
+        z-index: 5;
+        display: none;
+        width: auto;
+        max-width: calc(100vw - 32px);
+        border: 1px solid var(--line);
+        border-radius: var(--radius-l);
+        background: var(--panel);
+        box-shadow: var(--shadow-card);
+        padding: 6px;
+      }
+
+      .user-submenu {
+        position: absolute;
+        bottom: calc(100% + 6px);
+        left: calc(100% + 6px);
+        z-index: 6;
+        display: none;
+        width: var(--account-submenu-width);
+        max-width: calc(100vw - 32px);
+        border: 1px solid var(--line);
+        border-radius: var(--radius-l);
+        background: var(--panel);
+        box-shadow: var(--shadow-card);
+        padding: 6px;
+      }
+
+      .user-menu.open {
+        display: grid;
+      }
+
+      .user-submenu.open {
+        display: grid;
+      }
+
+      .user-menu button,
+      .user-submenu button {
+        display: grid;
+        grid-template-columns: auto minmax(0, 1fr) auto;
+        align-items: center;
+        gap: 9px;
+        justify-content: stretch;
+        width: 100%;
+        border: 0;
+        border-radius: 999px;
+        background: transparent;
+        min-height: 38px;
+        padding: 0 9px;
+        text-align: left;
+      }
+
+      .user-menu button:hover,
+      .user-submenu button:hover {
+        background: var(--hover);
+      }
+
+      .user-menu button:focus-visible,
+      .user-submenu button:focus-visible {
+        outline: 2px solid var(--focus-ring);
+        outline-offset: 2px;
+      }
+
+      .menu-section {
+        display: grid;
+        gap: 1px;
+      }
+
+      .menu-icon {
+        display: grid;
+        width: 19px;
+        height: 19px;
+        place-items: center;
+        color: var(--text);
+      }
+
+      .menu-icon svg {
+        width: 17px;
+        height: 17px;
+        stroke: currentColor;
+      }
+
+      .menu-title {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        color: var(--text);
+        font-size: 13px;
+        font-weight: 620;
+        white-space: nowrap;
+      }
+
+      .menu-chevron,
+      .menu-check {
+        color: var(--muted);
+        font-size: 16px;
+        font-weight: 750;
+        justify-self: end;
+      }
+
+      .menu-check {
+        color: var(--text);
+      }
+
+      .menu-separator {
+        height: 1px;
+        margin: 6px 0;
+        background: var(--line);
+      }
+
+      .main {
+        min-width: 0;
+      }
+
+      .topbar {
+        position: sticky;
+        top: 0;
+        z-index: 2;
+        display: flex;
+        justify-content: flex-end;
+        gap: 18px;
+        align-items: center;
+        border-bottom: 1px solid var(--line);
+        background: var(--topbar-bg);
+        min-height: 49px;
+        padding: 0 24px;
+      }
+
+      .searchbar {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        width: min(360px, 42vw);
+      }
+
+      .searchbar input {
+        width: 100%;
+        height: 40px;
+        border: 1px solid var(--line);
+        border-right: 0;
+        border-radius: 12px 0 0 12px;
+        background: var(--input-bg);
+        color: var(--text);
+        padding: 0 16px;
+        outline: none;
+      }
+
+      .searchbar input:focus {
+        border-color: var(--focus);
+        box-shadow: 0 0 0 2px var(--focus-ring);
+      }
+
+      .searchbar button {
+        width: 76px;
+        height: 40px;
+        border: 1px solid var(--line);
+        border-radius: 0 999px 999px 0;
+        background: transparent;
+        color: var(--text);
+        cursor: pointer;
+      }
+
+      .content {
+        padding: 32px 32px 40px;
+      }
+
+      .module {
+        display: none;
+      }
+
+      .module.active {
+        display: block;
+      }
+
+      .module-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-end;
+        gap: 16px;
+        margin-bottom: 16px;
+      }
+
+      h1,
+      h2 {
+        margin: 0;
+        letter-spacing: 0;
+      }
+
+      h1 {
+        font-size: 20px;
+        font-weight: 650;
+        line-height: 1.3;
+      }
+
+      h2 {
+        font-size: 16px;
+        font-weight: 600;
+        line-height: 1.4;
+      }
+
+      .muted {
+        color: var(--muted);
+      }
+
+      .panel {
+        border: 1px solid var(--line);
+        border-radius: var(--radius-l);
+        background: var(--panel);
+        box-shadow: var(--shadow-card);
+      }
+
+      .panel-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 12px;
+        padding: 16px 24px;
+        border-bottom: 1px solid var(--line);
+      }
+
+      .toolbar {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex-wrap: wrap;
+      }
+
+      .action-cell {
+        min-width: 124px;
+      }
+
+      .action-bar {
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 8px;
+      }
+
+      .toolbar-spread {
+        justify-content: space-between;
+      }
+
+      input,
+      textarea,
+      select {
+        width: 100%;
+        border: 1px solid var(--line);
+        border-radius: var(--radius-m);
+        background: var(--input-bg);
+        color: var(--text);
+        padding: 10px 11px;
+        outline: none;
+      }
+
+      input::placeholder,
+      textarea::placeholder {
+        color: var(--muted);
+      }
+
+      textarea {
+        min-height: 120px;
+        resize: vertical;
+        line-height: 1.55;
+      }
+
+      input:focus,
+      textarea:focus,
+      select:focus {
+        border-color: var(--focus);
+        box-shadow: 0 0 0 2px var(--focus-ring);
+      }
+
+      input[type="file"] {
+        padding: 8px;
+      }
+
+      button {
+        min-height: 38px;
+        border: 1px solid var(--line);
+        border-radius: 999px;
+        background: transparent;
+        color: var(--text);
+        cursor: pointer;
+        font-weight: 650;
+        padding: 0 14px;
+        white-space: nowrap;
+        transition:
+          border-color 120ms ease,
+          background-color 120ms ease,
+          color 120ms ease,
+          box-shadow 120ms ease;
+      }
+
+      button:hover {
+        background: var(--hover);
+      }
+
+      button:focus-visible,
+      a:focus-visible,
+      input:focus-visible,
+      textarea:focus-visible,
+      select:focus-visible {
+        outline: 2px solid var(--focus-ring);
+        outline-offset: 2px;
+      }
+
+      button.primary {
+        border-color: var(--brand);
+        background: var(--brand);
+        color: var(--on-brand);
+      }
+
+      button.primary:hover {
+        background: var(--brand-dark);
+      }
+
+      button.danger {
+        border-color: var(--danger);
+        background: transparent;
+        color: var(--danger);
+      }
+
+      button.danger:hover {
+        border-color: var(--danger);
+        background: var(--danger);
+        color: var(--on-danger);
+      }
+
+      .icon-btn {
+        display: inline-grid;
+        width: 36px;
+        min-width: 36px;
+        height: 36px;
+        min-height: 36px;
+        place-items: center;
+        border: 1px solid var(--line);
+        border-radius: 999px;
+        background: transparent;
+        color: var(--text);
+        padding: 0;
+        text-decoration: none;
+      }
+
+      .icon-btn:hover {
+        border-color: var(--line);
+        background: var(--hover);
+        text-decoration: none;
+      }
+
+      .icon-btn.danger:hover {
+        border-color: var(--danger);
+        background: var(--danger);
+        color: var(--on-danger);
+      }
+
+      .grid-2 {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) minmax(280px, 380px);
+        gap: 16px;
+      }
+
+      .detail-layout {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) minmax(320px, 420px);
+        gap: 16px;
+        align-items: start;
+      }
+
+      .form {
+        display: grid;
+        gap: 10px;
+        padding: 24px;
+      }
+
+      .row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+      }
+
+      .table-wrap {
+        overflow-x: auto;
+      }
+
+      .mobile-list {
+        display: none;
+      }
+
+      table {
+        width: 100%;
+        min-width: 900px;
+        border-collapse: collapse;
+        font-variant-numeric: tabular-nums;
+      }
+
+      th,
+      td {
+        padding: 12px 14px;
+        border-bottom: 1px solid var(--line);
+        text-align: left;
+        vertical-align: top;
+      }
+
+      th {
+        color: var(--muted);
+        font-size: 12px;
+        font-weight: 650;
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+        background: var(--table-head);
+      }
+
+      tbody tr {
+        transition: background-color 120ms ease;
+      }
+
+      tbody tr:hover {
+        background: var(--soft);
+      }
+
+      td {
+        line-height: 1.45;
+      }
+
+      .summary {
+        max-width: 360px;
+      }
+
+      .file-name,
+      .skill-name {
+        font-weight: 800;
+        overflow-wrap: anywhere;
+      }
+
+      .badge {
+        display: inline-grid;
+        min-height: 24px;
+        align-items: center;
+        border: 1px solid var(--line);
+        border-radius: 999px;
+        background: transparent;
+        color: var(--muted);
+        font-size: 12px;
+        font-weight: 750;
+        padding: 0 9px;
+        white-space: nowrap;
+      }
+
+      .badge.ok {
+        border-color: color-mix(in srgb, var(--ok) 28%, var(--line));
+        background: transparent;
+        color: var(--ok);
+      }
+
+      .badge.ai {
+        border-color: var(--line);
+        background: transparent;
+        color: var(--muted);
+      }
+
+      .detail-panel {
+        position: sticky;
+        top: 70px;
+      }
+
+      .detail-close {
+        display: none;
+      }
+
+      .detail-body {
+        display: grid;
+        gap: 12px;
+        padding: 16px;
+      }
+
+      .detail-kv {
+        display: grid;
+        gap: 4px;
+      }
+
+      .detail-kv label {
+        color: var(--muted);
+        font-size: 12px;
+        font-weight: 800;
+      }
+
+      .detail-kv div {
+        overflow-wrap: anywhere;
+        line-height: 1.5;
+      }
+
+      .preview-box {
+        display: grid;
+        min-height: 180px;
+        place-items: center;
+        border: 1px solid var(--line);
+        border-radius: var(--radius-s);
+        background: var(--preview-bg);
+        overflow: hidden;
+      }
+
+      .preview-box img {
+        display: block;
+        width: 100%;
+        max-height: 300px;
+        object-fit: contain;
+        background: var(--media-bg);
+      }
+
+      .file-type-preview {
+        display: grid;
+        justify-items: center;
+        gap: 12px;
+        padding: 28px;
+        text-align: center;
+      }
+
+      .office-file-icon {
+        width: 76px;
+        height: 76px;
+        object-fit: contain;
+      }
+
+      .generic-file-icon {
+        display: grid;
+        width: 76px;
+        height: 76px;
+        place-items: center;
+        border: 1px solid var(--line);
+        border-radius: var(--radius-m);
+        background: var(--doc-bg);
+        color: var(--muted);
+      }
+
+      .generic-file-icon svg {
+        width: 36px;
+        height: 36px;
+        stroke: currentColor;
+      }
+
+      .file-type-title {
+        color: var(--text);
+        font-size: 15px;
+        font-weight: 800;
+      }
+
+      .file-type-subtitle {
+        color: var(--muted);
+        font-size: 12px;
+      }
+
+      .schema-box {
+        max-height: 260px;
+        overflow: auto;
+        border: 1px solid var(--line);
+        border-radius: var(--radius-m);
+        background: var(--soft);
+        padding: 10px;
+        white-space: pre-wrap;
+        word-break: break-word;
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        font-size: 12px;
+        line-height: 1.45;
+      }
+
+      .empty {
+        display: grid;
+        justify-items: center;
+        gap: 8px;
+        padding: 32px 16px;
+        color: var(--muted);
+        text-align: center;
+      }
+
+      /* display:grid 会压过 hidden 属性的 UA display:none，必须显式恢复 */
+      .empty[hidden] {
+        display: none;
+      }
+
+      .empty::before {
+        content: "";
+        display: block;
+        width: 32px;
+        height: 32px;
+        border: 1px solid var(--line);
+        border-radius: 999px;
+        background:
+          linear-gradient(var(--line), var(--line)) center / 14px 1px no-repeat,
+          var(--soft);
+      }
+
+      .reply {
+        margin: 0;
+        min-height: 150px;
+        max-height: 330px;
+        overflow: auto;
+        white-space: pre-wrap;
+        border-top: 1px solid var(--line);
+        background: var(--soft);
+        padding: 14px 16px;
+        line-height: 1.55;
+      }
+
+      .qr {
+        display: grid;
+        min-height: 320px;
+        place-items: center;
+        padding: 16px;
+      }
+
+      .qr svg {
+        width: min(280px, 100%);
+        height: auto;
+      }
+
+      .wechat-layout {
+        display: grid;
+        gap: 16px;
+      }
+
+      .wechat-connect {
+        min-height: 300px;
+        display: grid;
+        place-items: center;
+        padding: 34px 18px;
+        text-align: center;
+      }
+
+      .wechat-connect-inner {
+        display: grid;
+        justify-items: center;
+        gap: 14px;
+        width: min(520px, 100%);
+      }
+
+      .wechat-connect-inner.qr-mode {
+        width: min(340px, 100%);
+      }
+
+      .wechat-connect-icon {
+        display: grid;
+        width: 70px;
+        height: 70px;
+        place-items: center;
+        border-radius: 999px;
+        background: var(--soft);
+        color: var(--muted);
+        font-size: 30px;
+        font-weight: 800;
+      }
+
+      .wechat-connect-title {
+        font-size: 18px;
+        font-weight: 750;
+      }
+
+      .wechat-qr {
+        min-height: auto;
+        width: 100%;
+        padding: 0;
+      }
+
+      .wechat-qr:empty {
+        display: none;
+      }
+
+      .wechat-qr-card {
+        display: grid;
+        place-items: center;
+        width: min(260px, 100%);
+        margin: 0 auto;
+        border: 1px solid var(--line);
+        border-radius: var(--radius-l);
+        background: var(--media-bg);
+        padding: 14px;
+        box-shadow: var(--shadow-card);
+      }
+
+      .wechat-qr-card svg {
+        width: 100%;
+        height: auto;
+      }
+
+      .wechat-connect-note {
+        color: var(--text);
+        font-size: 17px;
+        font-weight: 650;
+      }
+
+      .wechat-connect-link {
+        min-height: auto;
+        border: 0;
+        background: transparent;
+        color: var(--muted);
+        padding: 0;
+      }
+
+      .wechat-connect-link:hover {
+        background: transparent;
+        color: var(--text);
+      }
+
+      .wechat-share-wrap {
+        position: relative;
+        display: grid;
+        justify-items: center;
+        gap: 10px;
+      }
+
+      .wechat-share-panel {
+        position: absolute;
+        top: calc(100% + 8px);
+        left: 50%;
+        z-index: 5;
+        display: none;
+        width: min(240px, calc(100vw - 48px));
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 8px;
+        border: 1px solid var(--line);
+        border-radius: var(--radius-l);
+        background: var(--panel);
+        padding: 10px;
+        box-shadow: var(--shadow-card);
+        transform: translateX(-50%);
+      }
+
+      .wechat-share-panel.open {
+        display: grid;
+      }
+
+      .wechat-share-panel button {
+        justify-content: center;
+        min-height: 38px;
+        border-radius: 999px;
+        padding: 0 10px;
+      }
+
+      .wechat-share-panel button:last-child:nth-child(odd) {
+        grid-column: 1 / -1;
+      }
+
+      .spinner {
+        width: 36px;
+        height: 36px;
+        border: 3px solid var(--line);
+        border-top-color: var(--brand);
+        border-radius: 999px;
+        animation: spin 0.8s linear infinite;
+      }
+
+      @keyframes spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+
+      .wechat-bot-list {
+        gap: 12px;
+      }
+
+      .wechat-bot-card {
+        padding: 0;
+        overflow: hidden;
+      }
+
+      .wechat-bot-main {
+        display: grid;
+        grid-template-columns: auto minmax(0, 1fr) auto;
+        align-items: start;
+        gap: 12px;
+        padding: 14px 16px;
+      }
+
+      .status-dot {
+        width: 10px;
+        height: 10px;
+        margin-top: 7px;
+        border-radius: 999px;
+        background: var(--status-idle);
+      }
+
+      .status-dot.online {
+        background: var(--ok);
+      }
+
+      .wechat-bot-id {
+        font-size: 16px;
+        font-weight: 800;
+        overflow-wrap: anywhere;
+      }
+
+      .wechat-bot-meta {
+        display: grid;
+        gap: 4px;
+        margin-top: 4px;
+        color: var(--muted);
+        line-height: 1.35;
+      }
+
+      .wechat-bot-date {
+        color: var(--muted);
+        white-space: nowrap;
+      }
+
+      .wechat-bot-actions {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        align-items: center;
+        border-top: 1px solid var(--line);
+        padding: 12px 16px;
+        background: var(--soft);
+      }
+
+      .template-list {
+        display: grid;
+        gap: 10px;
+      }
+
+      .list-more {
+        display: flex;
+        justify-content: center;
+        border-top: 1px solid var(--line);
+        padding: 12px;
+      }
+
+      .list-more button[hidden] {
+        display: none;
+      }
+
+      .item {
+        border: 1px solid var(--line);
+        border-radius: var(--radius-l);
+        background: var(--panel);
+        padding: 12px;
+        box-shadow: var(--shadow-card);
+      }
+
+      dialog {
+        width: min(920px, calc(100vw - 32px));
+        max-height: min(760px, calc(100vh - 32px));
+        border: 0;
+        border-radius: var(--radius-l);
+        padding: 0;
+        background: var(--panel);
+        color: var(--text);
+        box-shadow: var(--shadow-dialog);
+      }
+
+      dialog.narrow-dialog {
+        width: min(520px, calc(100vw - 32px));
+      }
+
+      dialog.confirm-dialog {
+        width: min(460px, calc(100vw - 32px));
+        overflow: hidden;
+      }
+
+      dialog.wide-dialog {
+        width: min(1120px, calc(100vw - 32px));
+      }
+
+      dialog::backdrop {
+        background: rgba(15, 18, 25, 0.5);
+      }
+
+      .dialog-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 12px;
+        border-bottom: 1px solid var(--line);
+        padding: 14px 16px;
+      }
+
+      .confirm-shell {
+        display: grid;
+        gap: 18px;
+        padding: 20px;
+      }
+
+      .confirm-main {
+        display: grid;
+        grid-template-columns: 42px minmax(0, 1fr);
+        gap: 14px;
+      }
+
+      .confirm-icon {
+        display: grid;
+        width: 42px;
+        height: 42px;
+        place-items: center;
+        border-radius: 999px;
+        background: var(--danger-soft);
+        color: var(--danger);
+      }
+
+      .confirm-icon svg {
+        width: 20px;
+        height: 20px;
+        stroke: currentColor;
+      }
+
+      .confirm-copy {
+        display: grid;
+        gap: 8px;
+        min-width: 0;
+      }
+
+      .confirm-copy h2 {
+        margin: 0;
+        font-size: 18px;
+        line-height: 1.3;
+      }
+
+      .confirm-copy p {
+        margin: 0;
+        color: var(--muted);
+        line-height: 1.55;
+      }
+
+      .confirm-target {
+        max-width: 100%;
+        border: 1px solid var(--line);
+        border-radius: var(--radius-m);
+        background: var(--soft);
+        color: var(--text);
+        font-weight: 700;
+        line-height: 1.45;
+        overflow-wrap: anywhere;
+        padding: 10px 12px;
+      }
+
+      .confirm-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 10px;
+      }
+
+      .confirm-actions button {
+        min-width: 88px;
+      }
+
+      button.danger-fill {
+        border-color: var(--danger);
+        background: var(--danger);
+        color: var(--on-danger);
+      }
+
+      button.danger-fill:hover {
+        background: var(--danger-hover);
+      }
+
+      .preview-body {
+        max-height: 620px;
+        overflow: auto;
+        padding: 18px;
+        background: var(--dialog-preview-bg);
+      }
+
+      .doc-preview {
+        min-height: 420px;
+        max-width: 760px;
+        margin: 0 auto;
+        border: 1px solid var(--line);
+        background: var(--doc-bg);
+        padding: 38px;
+        box-shadow: var(--shadow-card);
+        line-height: 1.65;
+      }
+
+      .doc-preview table {
+        min-width: 0;
+        border-collapse: collapse;
+      }
+
+      .doc-preview td,
+      .doc-preview th {
+        border: 1px solid var(--line);
+        padding: 8px 10px;
+      }
+
+      .file-preview-stage {
+        display: grid;
+        min-height: min(620px, calc(100vh - 180px));
+        place-items: center;
+      }
+
+      .file-preview-stage img,
+      .file-preview-stage video {
+        display: block;
+        max-width: 100%;
+        max-height: min(620px, calc(100vh - 180px));
+        object-fit: contain;
+        background: var(--media-bg);
+      }
+
+      .file-preview-frame {
+        width: 100%;
+        height: min(620px, calc(100vh - 180px));
+        border: 1px solid var(--line);
+        border-radius: var(--radius-m);
+        background: var(--doc-bg);
+      }
+
+      .file-preview-text {
+        width: 100%;
+        max-height: min(620px, calc(100vh - 180px));
+        overflow: auto;
+        margin: 0;
+        border: 1px solid var(--line);
+        border-radius: var(--radius-m);
+        background: var(--doc-bg);
+        color: var(--text);
+        padding: 16px;
+        white-space: pre-wrap;
+      }
+
+      .file-preview-card {
+        display: grid;
+        justify-items: center;
+        gap: 12px;
+        max-width: 520px;
+        text-align: center;
+      }
+
+      a {
+        color: var(--text);
+        text-decoration: none;
+      }
+
+      a:hover {
+        text-decoration: underline;
+      }
+
+      @media (max-width: 960px) {
+        .app {
+          grid-template-columns: 1fr;
+        }
+
+        .sidebar {
+          position: static;
+          display: block;
+          height: auto;
+          border-right: 0;
+          border-bottom: 1px solid var(--line);
+        }
+
+        .sidebar-user {
+          display: none;
+        }
+
+        .nav {
+          grid-template-columns: repeat(4, minmax(0, 1fr));
+        }
+
+        .nav button {
+          justify-content: center;
+        }
+
+        .nav-label {
+          display: none;
+        }
+
+        .topbar,
+        .grid-2,
+        .detail-layout,
+        .row {
+          grid-template-columns: 1fr;
+        }
+
+        .detail-panel {
+          position: static;
+        }
+
+        .wechat-bot-main {
+          grid-template-columns: auto minmax(0, 1fr);
+        }
+
+        .wechat-bot-date {
+          grid-column: 2;
+        }
+
+      }
+
+      @media (max-width: 640px) {
+        body {
+          min-width: 0;
+          padding-bottom: calc(72px + env(safe-area-inset-bottom));
+          font-size: 13px;
+        }
+
+        .app {
+          display: block;
+          min-height: 100dvh;
+        }
+
+        .sidebar {
+          position: sticky;
+          top: 0;
+          z-index: 15;
+          display: grid;
+          grid-template-columns: minmax(0, 1fr) auto;
+          align-items: center;
+          min-height: 58px;
+          border-bottom: 1px solid var(--line);
+          background: var(--topbar-bg);
+          padding: 8px 16px;
+        }
+
+        .brand {
+          min-width: 0;
+          height: auto;
+          border-bottom: 0;
+          padding: 0;
+        }
+
+        .brand span {
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+        }
+
+        .nav {
+          position: fixed;
+          right: 0;
+          bottom: 0;
+          left: 0;
+          z-index: 16;
+          grid-template-columns: repeat(4, minmax(0, 1fr));
+          gap: 0;
+          border-top: 1px solid var(--line);
+          background: var(--topbar-bg);
+          padding: 6px 8px calc(6px + env(safe-area-inset-bottom));
+        }
+
+        .nav button {
+          display: grid;
+          justify-items: center;
+          gap: 3px;
+          min-height: 58px;
+          border-radius: 999px;
+          padding: 5px 2px;
+          font-size: 11px;
+        }
+
+        .nav-label {
+          display: block;
+          max-width: 100%;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+        }
+
+        .sidebar-user {
+          display: block;
+          margin-top: 0;
+          border-top: 0;
+          padding-top: 0;
+          --account-menu-width: calc(100vw - 24px);
+          --account-submenu-width: calc(100vw - 24px);
+        }
+
+        .user-card {
+          grid-template-columns: auto;
+          width: 42px;
+          min-height: 42px;
+          border-radius: 999px;
+          padding: 5px;
+        }
+
+        .user-card > span:nth-child(2),
+        .user-card .chevron {
+          display: none;
+        }
+
+        .avatar {
+          width: 32px;
+          height: 32px;
+        }
+
+        .user-menu,
+        .user-submenu {
+          position: fixed;
+          right: 16px;
+          bottom: calc(72px + env(safe-area-inset-bottom));
+          left: 16px;
+          width: auto;
+          max-width: none;
+          border-radius: 12px;
+          padding: 8px;
+        }
+
+        .user-submenu {
+          bottom: calc(72px + env(safe-area-inset-bottom));
+        }
+
+        .user-menu button,
+        .user-submenu button {
+          min-height: 44px;
+        }
+
+        .topbar {
+          display: none;
+        }
+
+        .content {
+          padding: 16px 16px 18px;
+        }
+
+        .module-head {
+          display: grid;
+          gap: 12px;
+          align-items: start;
+          margin-bottom: 12px;
+        }
+
+        .module-head > .toolbar,
+        .panel-head,
+        .toolbar-spread {
+          display: grid;
+          gap: 10px;
+          align-items: stretch;
+        }
+
+        h1 {
+          font-size: 20px;
+          line-height: 1.3;
+        }
+
+        h2 {
+          font-size: 15px;
+        }
+
+        button,
+        input,
+        textarea,
+        select {
+          min-height: 44px;
+        }
+
+        button {
+          border-radius: 999px;
+          padding: 0 12px;
+        }
+
+        .toolbar,
+        .action-bar {
+          display: flex;
+          gap: 8px;
+          flex-wrap: wrap;
+        }
+
+        .toolbar > *,
+        .panel-head .toolbar > * {
+          min-width: 0;
+        }
+
+        .searchbar,
+        .panel-head .searchbar,
+        .module-head .searchbar {
+          width: 100% !important;
+          grid-template-columns: minmax(0, 1fr) 72px;
+        }
+
+        .searchbar input {
+          height: 44px;
+          border-radius: 12px 0 0 12px;
+          padding: 0 12px;
+        }
+
+        .searchbar button {
+          width: auto;
+          height: 44px;
+          border-radius: 0 999px 999px 0;
+          padding: 0 10px;
+        }
+
+        #file-type-filter,
+        #skill-type-filter {
+          width: 100% !important;
+        }
+
+        .detail-layout,
+        .grid-2,
+        .row {
+          display: grid;
+          grid-template-columns: 1fr;
+          gap: 12px;
+        }
+
+        .table-wrap {
+          display: none;
+        }
+
+        .mobile-list {
+          display: grid;
+          gap: 10px;
+          padding: 10px;
+        }
+
+        .mobile-card {
+          display: grid;
+          gap: 10px;
+          border: 1px solid var(--line);
+          border-radius: var(--radius-m);
+          background: var(--panel);
+          padding: 12px;
+          box-shadow: var(--shadow-card);
+        }
+
+        .mobile-card-title {
+          font-weight: 800;
+          line-height: 1.35;
+          overflow-wrap: anywhere;
+        }
+
+        .mobile-card-meta {
+          display: flex;
+          gap: 6px;
+          flex-wrap: wrap;
+          color: var(--muted);
+          font-size: 12px;
+          line-height: 1.4;
+        }
+
+        .mobile-card-summary {
+          display: -webkit-box;
+          overflow: hidden;
+          color: var(--muted);
+          line-height: 1.5;
+          -webkit-box-orient: vertical;
+          -webkit-line-clamp: 2;
+        }
+
+        .mobile-card-actions {
+          display: flex;
+          gap: 8px;
+          flex-wrap: wrap;
+          align-items: center;
+        }
+
+        .mobile-card-actions .icon-btn {
+          width: 44px;
+          min-width: 44px;
+          height: 44px;
+          min-height: 44px;
+        }
+
+        .detail-panel {
+          position: fixed;
+          right: 0;
+          bottom: 0;
+          left: 0;
+          z-index: 30;
+          max-height: min(88dvh, 720px);
+          border-right: 0;
+          border-bottom: 0;
+          border-left: 0;
+          border-radius: 14px 14px 0 0;
+          box-shadow: var(--shadow-dialog);
+          transform: translateY(105%);
+          transition: transform 120ms ease;
+        }
+
+        .detail-panel.mobile-open {
+          transform: translateY(0);
+        }
+
+        .detail-close {
+          display: inline-grid;
+        }
+
+        .detail-body {
+          max-height: calc(88dvh - 58px);
+          overflow: auto;
+          padding-bottom: calc(20px + env(safe-area-inset-bottom));
+        }
+
+        .preview-box {
+          min-height: 150px;
+        }
+
+        .preview-box img {
+          max-height: 220px;
+        }
+
+        .wechat-connect {
+          min-height: 260px;
+          padding: 24px 14px;
+        }
+
+        .wechat-qr-card {
+          width: min(280px, calc(100vw - 48px));
+        }
+
+        .wechat-share-panel {
+          position: static;
+          width: min(280px, calc(100vw - 48px));
+          transform: none;
+        }
+
+        .wechat-bot-main {
+          grid-template-columns: auto minmax(0, 1fr);
+          padding: 12px;
+        }
+
+        .wechat-bot-date {
+          grid-column: 2;
+        }
+
+        .wechat-bot-actions {
+          display: grid;
+          grid-template-columns: 1fr;
+          padding: 10px 12px 12px;
+        }
+
+        dialog,
+        dialog.narrow-dialog,
+        dialog.confirm-dialog,
+        dialog.wide-dialog {
+          width: 100vw;
+          max-width: 100vw;
+          max-height: 100dvh;
+          border-radius: 0;
+        }
+
+        dialog:not(.confirm-dialog) {
+          height: 100dvh;
+        }
+
+        .dialog-head {
+          position: sticky;
+          top: 0;
+          z-index: 1;
+          background: var(--panel);
+          padding: 12px;
+        }
+
+        .preview-body {
+          max-height: calc(100dvh - 64px);
+          padding: 12px;
+        }
+
+        .doc-preview {
+          min-height: calc(100dvh - 120px);
+          padding: 16px;
+          box-shadow: none;
+        }
+
+        .file-preview-stage {
+          min-height: calc(100dvh - 100px);
+        }
+
+        .file-preview-frame,
+        .file-preview-text,
+        .file-preview-stage img,
+        .file-preview-stage video {
+          max-height: calc(100dvh - 118px);
+        }
+
+        .file-preview-frame {
+          height: calc(100dvh - 118px);
+        }
+
+        .confirm-shell {
+          padding: 18px 14px calc(18px + env(safe-area-inset-bottom));
+        }
+
+        .confirm-main {
+          grid-template-columns: 1fr;
+        }
+
+        .confirm-actions {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+        }
+      }
+
+      @media (max-width: 390px) {
+        .content {
+          padding-right: 16px;
+          padding-left: 16px;
+        }
+
+        .brand span {
+          max-width: 190px;
+        }
+
+        .mobile-card-actions {
+          display: grid;
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+
+        .mobile-card-actions .icon-btn,
+        .mobile-card-actions button,
+        .mobile-card-actions a {
+          width: 100%;
+        }
+
+        .searchbar {
+          grid-template-columns: minmax(0, 1fr) 64px;
+        }
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        *,
+        *::before,
+        *::after {
+          animation-duration: 1ms !important;
+          animation-iteration-count: 1 !important;
+          scroll-behavior: auto !important;
+          transition-duration: 0ms !important;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div id="loading-bar" class="loading-bar"></div>
+    <div id="app-toast" class="app-toast" role="status" aria-live="polite"></div>
+    <div class="app">
+      <aside class="sidebar">
+        <div class="brand">
+          <img class="brand-mark" src="/project-report-assistant-icon.svg" alt="" aria-hidden="true" />
+          <span data-i18n="app.title">项目报告助手</span>
+        </div>
+        <nav class="nav">
+          <button class="active" data-module-target="files"><span class="nav-icon" data-icon="files"></span><span class="nav-label" data-i18n="nav.files">文件</span></button>
+          <button data-module-target="skills"><span class="nav-icon" data-icon="skills"></span><span class="nav-label" data-i18n="nav.skills">技能</span></button>
+          <button data-module-target="templates"><span class="nav-icon" data-icon="templates"></span><span class="nav-label" data-i18n="nav.templates">模板管理</span></button>
+          <button data-module-target="wechat"><span class="nav-icon" data-icon="wechat"></span><span class="nav-label" data-i18n="nav.wechat">微信</span></button>
+        </nav>
+        <div class="sidebar-user">
+          <div id="user-menu" class="user-menu">
+            <div class="menu-section">
+              <button id="theme-menu-button" type="button" data-submenu-target="theme">
+                <span class="menu-icon" data-icon="appearance"></span>
+                <span class="menu-title" data-i18n="menu.appearance">外观</span>
+                <span class="menu-chevron">›</span>
+              </button>
+              <button id="language-menu-button" type="button" data-submenu-target="language">
+                <span class="menu-icon" data-icon="language"></span>
+                <span class="menu-title" data-i18n="menu.language">语言</span>
+                <span class="menu-chevron">›</span>
+              </button>
+            </div>
+            <div class="menu-separator"></div>
+            <button id="logout">
+              <span class="menu-icon" data-icon="logout"></span>
+              <span class="menu-title" data-i18n="menu.logout">退出登录</span>
+              <span></span>
+            </button>
+          </div>
+          <div id="theme-submenu" class="user-submenu">
+            <button type="button" data-theme-option="system">
+              <span class="menu-icon" data-icon="system"></span>
+              <span class="menu-title" data-i18n="theme.system">跟随系统</span>
+              <span class="menu-check"></span>
+            </button>
+            <button type="button" data-theme-option="light">
+              <span class="menu-icon" data-icon="sun"></span>
+              <span class="menu-title" data-i18n="theme.light">浅色模式</span>
+              <span class="menu-check"></span>
+            </button>
+            <button type="button" data-theme-option="dark">
+              <span class="menu-icon" data-icon="moon"></span>
+              <span class="menu-title" data-i18n="theme.dark">深色模式</span>
+              <span class="menu-check"></span>
+            </button>
+          </div>
+          <div id="language-submenu" class="user-submenu">
+            <button type="button" data-language-option="zh-cn">
+              <span class="menu-icon" data-icon="language"></span>
+              <span class="menu-title">简体中文</span>
+              <span class="menu-check"></span>
+            </button>
+            <button type="button" data-language-option="en">
+              <span class="menu-icon" data-icon="language"></span>
+              <span class="menu-title">English</span>
+              <span class="menu-check"></span>
+            </button>
+            <button type="button" data-language-option="zh-tw">
+              <span class="menu-icon" data-icon="language"></span>
+              <span class="menu-title">繁體中文</span>
+              <span class="menu-check"></span>
+            </button>
+          </div>
+          <button id="user-card" class="user-card" type="button" aria-expanded="false">
+            <span id="user-avatar" class="avatar">AD</span>
+            <span>
+              <span id="health-text" class="user-name" data-i18n="health.checking">检查登录中</span>
+              <span class="user-role" data-i18n="user.admin">管理员</span>
+            </span>
+            <span class="chevron">›</span>
+          </button>
+        </div>
+      </aside>
+
+      <div class="main">
+        <header class="topbar"></header>
+
+        <main class="content">
+          <section id="module-reports" class="module">
+            <div class="module-head">
+              <div class="toolbar">
+                <div>
+                  <h1 data-i18n="reports.title">报告列表</h1>
+                  <div class="muted" data-i18n="reports.subtitle">按关键词检索、下载或临时删除测试报告</div>
+                </div>
+                <div class="searchbar">
+                  <input id="report-keyword" placeholder="关键词查找报告" data-i18n-placeholder="reports.searchPlaceholder" />
+                  <button id="search-reports" data-i18n="common.search">搜索</button>
+                </div>
+              </div>
+              <button id="refresh-reports" data-i18n="common.refresh">刷新</button>
+            </div>
+            <div class="panel">
+              <div class="table-wrap">
+                <table>
+                  <thead>
+                    <tr>
+                      <th data-i18n="reports.titleColumn">标题</th>
+                      <th data-i18n="reports.submitterColumn">提交人</th>
+                      <th data-i18n="reports.projectColumn">项目</th>
+                      <th data-i18n="reports.summaryColumn">摘要</th>
+                      <th data-i18n="common.time">时间</th>
+                      <th data-i18n="common.actions">操作</th>
+                    </tr>
+                  </thead>
+                  <tbody id="reports-body"></tbody>
+                </table>
+              </div>
+              <div id="reports-mobile" class="mobile-list"></div>
+              <div id="reports-empty" class="empty" hidden data-i18n="reports.empty">暂无报告</div>
+            </div>
+          </section>
+
+          <section id="module-files" class="module active">
+            <div class="module-head">
+              <div>
+                <h1 data-i18n="files.title">文件</h1>
+                <div class="muted" data-i18n="files.subtitle">查看系统中已存储的媒体、文档和项目报告文件</div>
+              </div>
+              <button id="refresh-files" data-i18n="common.refresh">刷新</button>
+            </div>
+            <div class="detail-layout">
+              <div class="panel">
+                <div class="panel-head toolbar-spread">
+                  <h2 data-i18n="files.listTitle">文件列表</h2>
+                  <div class="toolbar">
+                    <select id="file-type-filter" style="width: 132px">
+                      <option value="any" data-i18n="files.filterAny">全部类型</option>
+                      <option value="image" data-i18n="media.image">图片</option>
+                      <option value="file" data-i18n="files.filterDocuments">Word / PDF / 文件</option>
+                      <option value="report" data-i18n="media.report">项目报告</option>
+                      <option value="video" data-i18n="media.video">视频</option>
+                      <option value="voice" data-i18n="media.voice">语音</option>
+                    </select>
+                    <div class="searchbar" style="width: min(320px, 52vw)">
+                      <input id="file-keyword" placeholder="搜索文件名、描述、元数据" data-i18n-placeholder="files.searchPlaceholder" />
+                      <button id="search-files" data-i18n="common.search">搜索</button>
+                    </div>
+                  </div>
+                </div>
+                <div class="table-wrap">
+                  <table>
+                    <thead>
+                      <tr>
+                        <th data-i18n="files.fileColumn">文件</th>
+                        <th data-i18n="common.type">类型</th>
+                        <th data-i18n="common.source">来源</th>
+                        <th data-i18n="common.user">用户</th>
+                        <th data-i18n="common.time">时间</th>
+                        <th data-i18n="common.actions">操作</th>
+                      </tr>
+                    </thead>
+                    <tbody id="files-body"></tbody>
+                  </table>
+                </div>
+                <div id="files-mobile" class="mobile-list"></div>
+                <div id="files-empty" class="empty" hidden data-i18n="files.empty">暂无已存储文件</div>
+                <div class="list-more">
+                  <button id="load-more-files" hidden data-i18n="common.loadMore">加载更多</button>
+                </div>
+              </div>
+              <aside class="panel detail-panel">
+                <div class="panel-head">
+                  <h2 data-i18n="files.detailTitle">文件详情</h2>
+                  <button class="icon-btn detail-close" type="button" data-close-detail="file" title="关闭" aria-label="关闭" data-i18n-title="common.close" data-i18n-aria-label="common.close">×</button>
+                </div>
+                <div id="file-detail" class="detail-body">
+                  <div class="empty" data-i18n="files.pickDetail">选择一个文件查看详情</div>
+                </div>
+              </aside>
+            </div>
+          </section>
+
+          <section id="module-skills" class="module">
+            <div class="module-head">
+              <div>
+                <h1 data-i18n="skills.title">技能</h1>
+                <div class="muted" data-i18n="skills.subtitle">查看机器人已加载的能力模块，当前面板只读，不提供删除</div>
+              </div>
+              <div class="toolbar">
+                <button id="reload-skills" data-i18n="skills.reload">重新加载</button>
+                <button id="refresh-skills" data-i18n="common.refresh">刷新</button>
+              </div>
+            </div>
+            <div class="detail-layout">
+              <div class="panel">
+                <div class="panel-head toolbar-spread">
+                  <h2 data-i18n="skills.listTitle">技能列表</h2>
+                  <div class="toolbar">
+                    <select id="skill-type-filter" style="width: 132px">
+                      <option value="all" data-i18n="common.all">全部</option>
+                      <option value="system" data-i18n="skills.systemSkill">系统技能</option>
+                      <option value="ai-created" data-i18n="skills.aiCreated">AI 创建</option>
+                    </select>
+                    <div class="searchbar" style="width: min(320px, 52vw)">
+                      <input id="skill-keyword" placeholder="搜索技能名称或描述" data-i18n-placeholder="skills.searchPlaceholder" />
+                      <button id="search-skills" data-i18n="common.search">搜索</button>
+                    </div>
+                  </div>
+                </div>
+                <div class="table-wrap">
+                  <table>
+                    <thead>
+                      <tr>
+                        <th data-i18n="skills.skillColumn">技能</th>
+                        <th data-i18n="common.type">类型</th>
+                        <th data-i18n="skills.toolCount">工具数</th>
+                        <th data-i18n="common.status">状态</th>
+                        <th data-i18n="common.updatedAt">更新时间</th>
+                        <th data-i18n="common.actions">操作</th>
+                      </tr>
+                    </thead>
+                    <tbody id="skills-body"></tbody>
+                  </table>
+                </div>
+                <div id="skills-mobile" class="mobile-list"></div>
+                <div id="skills-empty" class="empty" hidden data-i18n="skills.empty">暂无 Skill</div>
+              </div>
+              <aside class="panel detail-panel">
+                <div class="panel-head">
+                  <h2 data-i18n="skills.detailTitle">技能详情</h2>
+                  <button class="icon-btn detail-close" type="button" data-close-detail="skill" title="关闭" aria-label="关闭" data-i18n-title="common.close" data-i18n-aria-label="common.close">×</button>
+                </div>
+                <div id="skill-detail" class="detail-body">
+                  <div class="empty" data-i18n="skills.pickDetail">选择一个 Skill 查看详情</div>
+                </div>
+              </aside>
+            </div>
+          </section>
+
+          <section id="module-templates" class="module">
+            <div class="module-head">
+              <div>
+                <h1 data-i18n="templates.title">模板管理</h1>
+                <div class="muted" data-i18n="templates.subtitle">上传和管理 .docx 占位符模板</div>
+              </div>
+              <button id="refresh-templates" data-i18n="common.refresh">刷新</button>
+            </div>
+            <div class="panel">
+              <div class="panel-head">
+                <h2 data-i18n="templates.listTitle">模板列表</h2>
+                <button id="open-template-upload" class="primary" data-i18n="common.add">添加</button>
+              </div>
+              <div id="templates" class="form template-list"></div>
+            </div>
+          </section>
+
+          <section id="module-wechat" class="module">
+            <div class="module-head">
+              <div>
+                <h1 data-i18n="wechat.title">微信机器人</h1>
+              </div>
+            </div>
+            <div class="wechat-layout">
+              <div class="panel wechat-connect">
+                <div id="wechat-connect-inner" class="wechat-connect-inner">
+                  <div class="wechat-connect-icon">◎</div>
+                  <div class="wechat-connect-title" data-i18n="wechat.connectTitle">扫码绑定一个新的微信机器人</div>
+                  <button id="create-ilink-session" class="primary">Add Bot</button>
+                  <div id="ilink-session" class="qr muted wechat-qr"></div>
+                </div>
+              </div>
+              <div class="panel">
+                <div class="panel-head">
+                  <h2 id="ilink-bots-title">BOTS (0)</h2>
+                </div>
+                <div id="ilink-bots" class="form wechat-bot-list"></div>
+              </div>
+            </div>
+          </section>
+        </main>
+      </div>
+    </div>
+
+    <dialog id="template-preview-dialog">
+      <div class="dialog-head">
+        <div>
+          <h2 id="template-preview-title" data-i18n="templates.previewTitle">模板预览</h2>
+          <div id="template-preview-note" class="muted"></div>
+        </div>
+        <button id="close-template-preview" data-i18n="common.close">关闭</button>
+      </div>
+      <div class="preview-body">
+        <div id="template-preview-content" class="doc-preview"></div>
+      </div>
+    </dialog>
+
+    <dialog id="file-preview-dialog" class="wide-dialog">
+      <div class="dialog-head">
+        <div>
+          <h2 id="file-preview-title" data-i18n="files.previewTitle">文件预览</h2>
+          <div id="file-preview-note" class="muted"></div>
+        </div>
+        <button id="close-file-preview" data-i18n="common.close">关闭</button>
+      </div>
+      <div class="preview-body">
+        <div id="file-preview-content" class="file-preview-stage"></div>
+      </div>
+    </dialog>
+
+    <dialog id="confirm-dialog" class="confirm-dialog">
+      <div class="confirm-shell">
+        <div class="confirm-main">
+          <div class="confirm-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none">
+              <path d="M12 8v5M12 17h.01" stroke-width="2" stroke-linecap="round" />
+              <path d="M10.3 4.5h3.4L21 18H3L10.3 4.5Z" stroke-width="1.8" stroke-linejoin="round" />
+            </svg>
+          </div>
+          <div class="confirm-copy">
+            <h2 id="confirm-title" data-i18n="confirm.deleteTitle">确认删除</h2>
+            <p id="confirm-message"></p>
+            <div id="confirm-target" class="confirm-target" hidden></div>
+          </div>
+        </div>
+        <div class="confirm-actions">
+          <button id="confirm-cancel" type="button" data-i18n="common.cancel">取消</button>
+          <button id="confirm-submit" type="button" class="danger-fill" data-i18n="common.delete">删除</button>
+        </div>
+      </div>
+    </dialog>
+
+    <dialog id="template-upload-dialog" class="narrow-dialog">
+      <div class="dialog-head">
+        <div>
+          <h2 data-i18n="templates.uploadTitle">上传模板</h2>
+        </div>
+        <button id="close-template-upload" data-i18n="common.close">关闭</button>
+      </div>
+      <div class="form">
+        <input id="template-name" placeholder="模板名称" value="默认工作报告模板" data-i18n-placeholder="templates.namePlaceholder" data-i18n-value-default="templates.defaultName" />
+        <input id="template-description" placeholder="适用场景/说明" data-i18n-placeholder="templates.descriptionPlaceholder" />
+        <input id="template-file" type="file" accept=".docx" />
+        <button id="upload-template" class="primary" data-i18n="templates.uploadButton">上传 .docx 模板</button>
+      </div>
+    </dialog>
+
+    <script>
+      const $ = (id) => document.getElementById(id);
+      const officeIconBaseUrl = "https://res.cdn.office.net/files/fabric-cdn-prod_20221209.001/assets/item-types/96";
+      let loadingTimer = 0;
+      let currentIlinkSessionId = "";
+      let currentIlinkQrValue = "";
+      let currentIlinkQrSvg = "";
+      let ilinkSessionRefreshTimer = 0;
+      let ilinkBotsRefreshTimer = 0;
+      let fileItems = [];
+      let filePagination = { limit: 50, offset: 0, hasMore: false };
+      let skillItems = [];
+      let currentIlinkSession = null;
+      const themeMediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
+
+      const translations = {
+        "zh-cn": {
+          "app.title": "项目报告助手",
+          "nav.files": "文件",
+          "nav.skills": "技能",
+          "nav.templates": "模板管理",
+          "nav.wechat": "微信",
+          "menu.appearance": "外观",
+          "menu.language": "语言",
+          "menu.logout": "退出登录",
+          "theme.system": "跟随系统",
+          "theme.light": "浅色模式",
+          "theme.dark": "深色模式",
+          "user.admin": "管理员",
+          "common.search": "搜索",
+          "common.refresh": "刷新",
+          "common.actions": "操作",
+          "common.time": "时间",
+          "common.type": "类型",
+          "common.source": "来源",
+          "common.user": "用户",
+          "common.status": "状态",
+          "common.updatedAt": "更新时间",
+          "common.all": "全部",
+          "common.add": "添加",
+          "common.cancel": "取消",
+          "common.close": "关闭",
+          "common.view": "查看",
+          "common.preview": "预览",
+          "common.open": "打开",
+          "common.delete": "删除",
+          "common.download": "下载",
+          "common.enable": "启用",
+          "common.disable": "停用",
+          "common.unknown": "未知",
+          "common.none": "无",
+          "common.noDescription": "无描述",
+          "common.readOnly": "只读",
+          "common.available": "可访问",
+          "common.noPublicUrl": "无公开地址",
+          "common.created": "创建",
+          "common.updated": "更新",
+          "common.loading": "Loading",
+          "common.loadMore": "加载更多",
+          "confirm.deleteTitle": "确认删除",
+          "confirm.deactivateTitle": "确认停用",
+          "reports.title": "报告列表",
+          "reports.subtitle": "按关键词检索、下载或临时删除测试报告",
+          "reports.searchPlaceholder": "关键词查找报告",
+          "reports.titleColumn": "标题",
+          "reports.submitterColumn": "提交人",
+          "reports.projectColumn": "项目",
+          "reports.summaryColumn": "摘要",
+          "reports.empty": "暂无报告",
+          "reports.deleteConfirm": "确认删除这份测试报告？对应 Word 文件也会删除。",
+          "reports.deleteMessage": "删除后，这份报告记录和对应 Word 文件都会从系统中移除。",
+          "files.title": "文件",
+          "files.subtitle": "查看系统中已存储的媒体、文档和项目报告文件",
+          "files.listTitle": "文件列表",
+          "files.filterAny": "全部类型",
+          "files.filterDocuments": "Word / PDF / 文件",
+          "files.searchPlaceholder": "搜索文件名、描述、元数据",
+          "files.fileColumn": "文件",
+          "files.empty": "暂无已存储文件",
+          "files.noMatch": "未找到匹配文件",
+          "files.pickDetail": "选择一个文件查看详情",
+          "files.detailTitle": "文件详情",
+          "files.previewTitle": "文件预览",
+          "files.fileName": "文件名",
+          "files.fileSize": "文件大小",
+          "files.sourceUser": "来源用户",
+          "files.storagePath": "存储路径",
+          "files.publicUrl": "临时访问链接",
+          "files.description": "描述",
+          "files.metadata": "简要元数据",
+          "files.unknownSize": "未知",
+          "files.metadataEmpty": "无简要元数据",
+          "files.deleteConfirm": "确认删除「{name}」？对应存储文件也会删除。",
+          "files.deleteMessage": "删除后，该文件记录和对应存储文件都会从系统中移除。",
+          "files.deleted": "文件已删除",
+          "files.previewUnsupported": "该类型暂不支持完整在线预览，可打开或下载查看。",
+          "files.previewMissing": "文件不存在或已被移除。",
+          "media.report": "项目报告",
+          "media.image": "图片",
+          "media.file": "文件",
+          "media.voice": "语音",
+          "media.video": "视频",
+          "source.generatedDocument": "AI 生成",
+          "source.generatedReport": "项目汇报",
+          "source.projectReport": "项目汇报",
+          "source.wechatMedia": "微信上传",
+          "source.media": "媒体库",
+          "source.report": "报告",
+          "source.unknown": "未知来源",
+          "fileType.word": "Word 文档",
+          "fileType.excel": "Excel 工作簿",
+          "fileType.powerpoint": "PowerPoint 演示文稿",
+          "fileType.pdf": "PDF 文档",
+          "fileType.zip": "压缩文件",
+          "fileType.text": "文本文件",
+          "skills.title": "技能",
+          "skills.subtitle": "查看机器人已加载的能力模块，当前面板只读，不提供删除",
+          "skills.reload": "重新加载",
+          "skills.listTitle": "技能列表",
+          "skills.systemSkill": "系统技能",
+          "skills.aiCreated": "AI 创建",
+          "skills.searchPlaceholder": "搜索技能名称或描述",
+          "skills.skillColumn": "技能",
+          "skills.toolCount": "工具数",
+          "skills.empty": "暂无 Skill",
+          "skills.noMatch": "未找到匹配 Skill",
+          "skills.detailTitle": "技能详情",
+          "skills.pickDetail": "选择一个 Skill 查看详情",
+          "skills.name": "技能名称",
+          "skills.loaded": "已加载",
+          "skills.disabled": "未启用",
+          "skills.sourcePath": "来源目录",
+          "skills.security": "安全状态",
+          "skills.tools": "工具函数",
+          "skills.noTools": "无工具函数",
+          "skills.unknownPath": "未知",
+          "skills.aiSafety": "AI 创建技能，当前仅允许查看，不允许从面板删除。",
+          "skills.systemSafety": "系统技能，当前仅允许查看。",
+          "templates.title": "模板管理",
+          "templates.subtitle": "上传和管理 .docx 占位符模板",
+          "templates.listTitle": "模板列表",
+          "templates.previewTitle": "模板预览",
+          "templates.uploadTitle": "上传模板",
+          "templates.namePlaceholder": "模板名称",
+          "templates.descriptionPlaceholder": "适用场景/说明",
+          "templates.defaultName": "默认工作报告模板",
+          "templates.uploadButton": "上传 .docx 模板",
+          "templates.active": "启用中",
+          "templates.inactive": "已停用",
+          "templates.uploaded": "已上传文件",
+          "templates.fallback": "无文件，使用兜底生成",
+          "templates.empty": "暂无模板",
+          "templates.previewNote": "网页预览会尽量保留内容结构，最终 Word 样式以 .docx 文件为准。",
+          "templates.noPreview": "暂无可预览内容",
+          "templates.docxOnly": "模板文件只支持 .docx 格式",
+          "templates.untitled": "未命名模板",
+          "templates.deleteConfirm": "确认删除这个模板？已有报告引用的模板不能删除，可改为停用。",
+          "templates.deleteMessage": "删除后，这个模板会从模板管理中移除。已有报告引用的模板不能删除，可改为停用。",
+          "wechat.title": "微信机器人",
+          "wechat.connectTitle": "扫码绑定一个新的微信机器人",
+          "wechat.generating": "正在生成二维码",
+          "wechat.wait": "请稍候",
+          "wechat.scan": "打开微信扫描二维码",
+          "wechat.noBots": "还没有接入机器人，请先生成二维码并扫码。",
+          "wechat.statusPrefix": "状态",
+          "wechat.loginTime": "登录时间",
+          "wechat.pollingTime": "轮询时间",
+          "wechat.error": "错误",
+          "wechat.notLoggedIn": "未登录",
+          "wechat.notPolled": "未轮询",
+          "wechat.refreshLogin": "刷新登录",
+          "wechat.manualPoll": "手动轮询",
+          "wechat.deactivate": "停用",
+          "wechat.copyQr": "复制二维码",
+          "wechat.saveQr": "保存二维码",
+          "wechat.share": "Share",
+          "wechat.cancel": "Cancel",
+          "wechat.noQr": "当前没有可分享的二维码。",
+          "wechat.copySuccess": "已复制到剪贴板",
+          "wechat.copyFailed": "复制失败，请重试",
+          "wechat.deleteConfirm": "确认停用这个微信机器人？",
+          "wechat.deleteMessage": "停用后，这个机器人将从当前管理列表中移除。",
+          "wechat.pollDone": "轮询完成：updates={updates}, handled={handled}, skipped={skipped}",
+          "ilink.waiting_scan": "等待扫码",
+          "ilink.scanned": "已扫码，等待确认",
+          "ilink.confirmed": "已接入",
+          "ilink.online": "在线",
+          "ilink.expired": "已过期",
+          "ilink.deleted": "已停用",
+          "health.checking": "检查登录中",
+          "health.unavailable": "服务不可用"
+        },
+        en: {
+          "app.title": "Project Report Assistant",
+          "nav.files": "Files",
+          "nav.skills": "Skills",
+          "nav.templates": "Templates",
+          "nav.wechat": "WeChat",
+          "menu.appearance": "Appearance",
+          "menu.language": "Language",
+          "menu.logout": "Log out",
+          "theme.system": "Use device theme",
+          "theme.light": "Light mode",
+          "theme.dark": "Dark mode",
+          "user.admin": "Admin",
+          "common.search": "Search",
+          "common.refresh": "Refresh",
+          "common.actions": "Actions",
+          "common.time": "Time",
+          "common.type": "Type",
+          "common.source": "Source",
+          "common.user": "User",
+          "common.status": "Status",
+          "common.updatedAt": "Updated",
+          "common.all": "All",
+          "common.add": "Add",
+          "common.cancel": "Cancel",
+          "common.close": "Close",
+          "common.view": "View",
+          "common.preview": "Preview",
+          "common.open": "Open",
+          "common.delete": "Delete",
+          "common.download": "Download",
+          "common.enable": "Enable",
+          "common.disable": "Disable",
+          "common.unknown": "Unknown",
+          "common.none": "None",
+          "common.noDescription": "No description",
+          "common.readOnly": "Read only",
+          "common.available": "Accessible",
+          "common.noPublicUrl": "No public URL",
+          "common.created": "Created",
+          "common.updated": "Updated",
+          "common.loading": "Loading",
+          "common.loadMore": "Load more",
+          "confirm.deleteTitle": "Confirm deletion",
+          "confirm.deactivateTitle": "Confirm deactivation",
+          "reports.title": "Reports",
+          "reports.subtitle": "Search, download, or temporarily delete test reports",
+          "reports.searchPlaceholder": "Search reports",
+          "reports.titleColumn": "Title",
+          "reports.submitterColumn": "Submitter",
+          "reports.projectColumn": "Project",
+          "reports.summaryColumn": "Summary",
+          "reports.empty": "No reports",
+          "reports.deleteConfirm": "Delete this test report? The related Word file will also be removed.",
+          "reports.deleteMessage": "This report record and its Word file will be removed from the system.",
+          "files.title": "Files",
+          "files.subtitle": "View stored media, documents, and project report files",
+          "files.listTitle": "File list",
+          "files.filterAny": "All types",
+          "files.filterDocuments": "Word / PDF / Files",
+          "files.searchPlaceholder": "Search file name, description, metadata",
+          "files.fileColumn": "File",
+          "files.empty": "No stored files",
+          "files.noMatch": "No matching files",
+          "files.pickDetail": "Select a file to view details",
+          "files.detailTitle": "File details",
+          "files.previewTitle": "File preview",
+          "files.fileName": "File name",
+          "files.fileSize": "File size",
+          "files.sourceUser": "Source user",
+          "files.storagePath": "Storage path",
+          "files.publicUrl": "Temporary access URL",
+          "files.description": "Description",
+          "files.metadata": "Brief metadata",
+          "files.unknownSize": "Unknown",
+          "files.metadataEmpty": "No brief metadata",
+          "files.deleteConfirm": "Delete \"{name}\"? The stored file will also be removed.",
+          "files.deleteMessage": "This file record and its stored file will be removed from the system.",
+          "files.deleted": "File deleted",
+          "files.previewUnsupported": "This file type cannot be fully previewed online. Open or download it to view.",
+          "files.previewMissing": "The file does not exist or has been removed.",
+          "media.report": "Project report",
+          "media.image": "Image",
+          "media.file": "File",
+          "media.voice": "Voice",
+          "media.video": "Video",
+          "source.generatedDocument": "AI generated",
+          "source.generatedReport": "Project report",
+          "source.projectReport": "Project report",
+          "source.wechatMedia": "WeChat upload",
+          "source.media": "Media library",
+          "source.report": "Report",
+          "source.unknown": "Unknown source",
+          "fileType.word": "Word document",
+          "fileType.excel": "Excel workbook",
+          "fileType.powerpoint": "PowerPoint presentation",
+          "fileType.pdf": "PDF document",
+          "fileType.zip": "Archive",
+          "fileType.text": "Text file",
+          "skills.title": "Skills",
+          "skills.subtitle": "View loaded bot capabilities. This panel is read-only.",
+          "skills.reload": "Reload",
+          "skills.listTitle": "Skill list",
+          "skills.systemSkill": "System skill",
+          "skills.aiCreated": "AI created",
+          "skills.searchPlaceholder": "Search skill name or description",
+          "skills.skillColumn": "Skill",
+          "skills.toolCount": "Tools",
+          "skills.empty": "No skills",
+          "skills.noMatch": "No matching skills",
+          "skills.detailTitle": "Skill details",
+          "skills.pickDetail": "Select a skill to view details",
+          "skills.name": "Skill name",
+          "skills.loaded": "Loaded",
+          "skills.disabled": "Disabled",
+          "skills.sourcePath": "Source directory",
+          "skills.security": "Security status",
+          "skills.tools": "Tool functions",
+          "skills.noTools": "No tool functions",
+          "skills.unknownPath": "Unknown",
+          "skills.aiSafety": "AI-created skill. It can only be viewed here and cannot be deleted from the panel.",
+          "skills.systemSafety": "System skill. It can only be viewed here.",
+          "templates.title": "Templates",
+          "templates.subtitle": "Upload and manage .docx placeholder templates",
+          "templates.listTitle": "Template list",
+          "templates.previewTitle": "Template preview",
+          "templates.uploadTitle": "Upload template",
+          "templates.namePlaceholder": "Template name",
+          "templates.descriptionPlaceholder": "Scenario / notes",
+          "templates.defaultName": "Default work report template",
+          "templates.uploadButton": "Upload .docx template",
+          "templates.active": "Active",
+          "templates.inactive": "Disabled",
+          "templates.uploaded": "File uploaded",
+          "templates.fallback": "No file, fallback generation enabled",
+          "templates.empty": "No templates",
+          "templates.previewNote": "The web preview keeps the content structure where possible. Final styling follows the .docx file.",
+          "templates.noPreview": "No preview available",
+          "templates.docxOnly": "Only .docx template files are supported",
+          "templates.untitled": "Untitled template",
+          "templates.deleteConfirm": "Delete this template? Templates referenced by existing reports cannot be deleted. Disable it instead.",
+          "templates.deleteMessage": "This template will be removed from template management. Templates referenced by reports cannot be deleted; disable them instead.",
+          "wechat.title": "WeChat Bot",
+          "wechat.connectTitle": "Scan to bind a new WeChat bot",
+          "wechat.generating": "Generating QR code",
+          "wechat.wait": "Please wait",
+          "wechat.scan": "Open WeChat and scan the QR code",
+          "wechat.noBots": "No bots connected yet. Generate a QR code and scan it first.",
+          "wechat.statusPrefix": "Status",
+          "wechat.loginTime": "Login time",
+          "wechat.pollingTime": "Polling time",
+          "wechat.error": "Error",
+          "wechat.notLoggedIn": "Not logged in",
+          "wechat.notPolled": "Not polled",
+          "wechat.refreshLogin": "Refresh login",
+          "wechat.manualPoll": "Manual poll",
+          "wechat.deactivate": "Deactivate",
+          "wechat.copyQr": "Copy QR code",
+          "wechat.saveQr": "Save QR code",
+          "wechat.share": "Share",
+          "wechat.cancel": "Cancel",
+          "wechat.noQr": "No QR code is available to share.",
+          "wechat.copySuccess": "Copied to clipboard",
+          "wechat.copyFailed": "Copy failed. Please try again.",
+          "wechat.deleteConfirm": "Deactivate this WeChat bot?",
+          "wechat.deleteMessage": "After deactivation, this bot will be removed from the current management list.",
+          "wechat.pollDone": "Polling complete: updates={updates}, handled={handled}, skipped={skipped}",
+          "ilink.waiting_scan": "Waiting for scan",
+          "ilink.scanned": "Scanned, waiting for confirmation",
+          "ilink.confirmed": "Connected",
+          "ilink.online": "Online",
+          "ilink.expired": "Expired",
+          "ilink.deleted": "Deactivated",
+          "health.checking": "Checking login",
+          "health.unavailable": "Service unavailable"
+        },
+        "zh-tw": {
+          "app.title": "專案報告助手",
+          "nav.files": "檔案",
+          "nav.skills": "技能",
+          "nav.templates": "範本管理",
+          "nav.wechat": "微信",
+          "menu.appearance": "外觀",
+          "menu.language": "語言",
+          "menu.logout": "登出",
+          "theme.system": "跟隨系統",
+          "theme.light": "淺色模式",
+          "theme.dark": "深色模式",
+          "user.admin": "管理員",
+          "common.search": "搜尋",
+          "common.refresh": "重新整理",
+          "common.actions": "操作",
+          "common.time": "時間",
+          "common.type": "類型",
+          "common.source": "來源",
+          "common.user": "使用者",
+          "common.status": "狀態",
+          "common.updatedAt": "更新時間",
+          "common.all": "全部",
+          "common.add": "新增",
+          "common.cancel": "取消",
+          "common.close": "關閉",
+          "common.view": "查看",
+          "common.preview": "預覽",
+          "common.open": "開啟",
+          "common.delete": "刪除",
+          "common.download": "下載",
+          "common.enable": "啟用",
+          "common.disable": "停用",
+          "common.unknown": "未知",
+          "common.none": "無",
+          "common.noDescription": "無描述",
+          "common.readOnly": "唯讀",
+          "common.available": "可存取",
+          "common.noPublicUrl": "無公開位址",
+          "common.created": "建立",
+          "common.updated": "更新",
+          "common.loading": "Loading",
+          "common.loadMore": "載入更多",
+          "confirm.deleteTitle": "確認刪除",
+          "confirm.deactivateTitle": "確認停用",
+          "reports.title": "報告列表",
+          "reports.subtitle": "依關鍵字檢索、下載或暫時刪除測試報告",
+          "reports.searchPlaceholder": "關鍵字查找報告",
+          "reports.titleColumn": "標題",
+          "reports.submitterColumn": "提交人",
+          "reports.projectColumn": "專案",
+          "reports.summaryColumn": "摘要",
+          "reports.empty": "暫無報告",
+          "reports.deleteConfirm": "確認刪除這份測試報告？對應 Word 檔案也會刪除。",
+          "reports.deleteMessage": "刪除後，這份報告記錄和對應 Word 檔案都會從系統中移除。",
+          "files.title": "檔案",
+          "files.subtitle": "查看系統中已儲存的媒體、文件和專案報告檔案",
+          "files.listTitle": "檔案列表",
+          "files.filterAny": "全部類型",
+          "files.filterDocuments": "Word / PDF / 檔案",
+          "files.searchPlaceholder": "搜尋檔名、描述、元資料",
+          "files.fileColumn": "檔案",
+          "files.empty": "暫無已儲存檔案",
+          "files.noMatch": "未找到匹配檔案",
+          "files.pickDetail": "選擇一個檔案查看詳情",
+          "files.detailTitle": "檔案詳情",
+          "files.previewTitle": "檔案預覽",
+          "files.fileName": "檔名",
+          "files.fileSize": "檔案大小",
+          "files.sourceUser": "來源使用者",
+          "files.storagePath": "儲存路徑",
+          "files.publicUrl": "臨時存取連結",
+          "files.description": "描述",
+          "files.metadata": "簡要元資料",
+          "files.unknownSize": "未知",
+          "files.metadataEmpty": "無簡要元資料",
+          "files.deleteConfirm": "確認刪除「{name}」？對應儲存檔案也會刪除。",
+          "files.deleteMessage": "刪除後，該檔案記錄和對應儲存檔案都會從系統中移除。",
+          "files.deleted": "檔案已刪除",
+          "files.previewUnsupported": "此類型暫不支援完整線上預覽，可開啟或下載查看。",
+          "files.previewMissing": "檔案不存在或已被移除。",
+          "media.report": "專案報告",
+          "media.image": "圖片",
+          "media.file": "檔案",
+          "media.voice": "語音",
+          "media.video": "影片",
+          "source.generatedDocument": "AI 生成",
+          "source.generatedReport": "專案彙報",
+          "source.projectReport": "專案彙報",
+          "source.wechatMedia": "微信上傳",
+          "source.media": "媒體庫",
+          "source.report": "報告",
+          "source.unknown": "未知來源",
+          "fileType.word": "Word 文件",
+          "fileType.excel": "Excel 活頁簿",
+          "fileType.powerpoint": "PowerPoint 簡報",
+          "fileType.pdf": "PDF 文件",
+          "fileType.zip": "壓縮檔",
+          "fileType.text": "文字檔",
+          "skills.title": "技能",
+          "skills.subtitle": "查看機器人已載入的能力模組，目前面板唯讀，不提供刪除",
+          "skills.reload": "重新載入",
+          "skills.listTitle": "技能列表",
+          "skills.systemSkill": "系統技能",
+          "skills.aiCreated": "AI 建立",
+          "skills.searchPlaceholder": "搜尋技能名稱或描述",
+          "skills.skillColumn": "技能",
+          "skills.toolCount": "工具數",
+          "skills.empty": "暫無 Skill",
+          "skills.noMatch": "未找到匹配 Skill",
+          "skills.detailTitle": "技能詳情",
+          "skills.pickDetail": "選擇一個 Skill 查看詳情",
+          "skills.name": "技能名稱",
+          "skills.loaded": "已載入",
+          "skills.disabled": "未啟用",
+          "skills.sourcePath": "來源目錄",
+          "skills.security": "安全狀態",
+          "skills.tools": "工具函式",
+          "skills.noTools": "無工具函式",
+          "skills.unknownPath": "未知",
+          "skills.aiSafety": "AI 建立技能，目前僅允許查看，不允許從面板刪除。",
+          "skills.systemSafety": "系統技能，目前僅允許查看。",
+          "templates.title": "範本管理",
+          "templates.subtitle": "上傳和管理 .docx 佔位符範本",
+          "templates.listTitle": "範本列表",
+          "templates.previewTitle": "範本預覽",
+          "templates.uploadTitle": "上傳範本",
+          "templates.namePlaceholder": "範本名稱",
+          "templates.descriptionPlaceholder": "適用場景/說明",
+          "templates.defaultName": "預設工作報告範本",
+          "templates.uploadButton": "上傳 .docx 範本",
+          "templates.active": "啟用中",
+          "templates.inactive": "已停用",
+          "templates.uploaded": "已上傳檔案",
+          "templates.fallback": "無檔案，使用備援生成",
+          "templates.empty": "暫無範本",
+          "templates.previewNote": "網頁預覽會盡量保留內容結構，最終 Word 樣式以 .docx 檔案為準。",
+          "templates.noPreview": "暫無可預覽內容",
+          "templates.docxOnly": "範本檔案只支援 .docx 格式",
+          "templates.untitled": "未命名範本",
+          "templates.deleteConfirm": "確認刪除這個範本？已有報告引用的範本不能刪除，可改為停用。",
+          "templates.deleteMessage": "刪除後，這個範本會從範本管理中移除。已有報告引用的範本不能刪除，可改為停用。",
+          "wechat.title": "微信機器人",
+          "wechat.connectTitle": "掃碼綁定一個新的微信機器人",
+          "wechat.generating": "正在生成二維碼",
+          "wechat.wait": "請稍候",
+          "wechat.scan": "打開微信掃描二維碼",
+          "wechat.noBots": "還沒有接入機器人，請先生成二維碼並掃碼。",
+          "wechat.statusPrefix": "狀態",
+          "wechat.loginTime": "登入時間",
+          "wechat.pollingTime": "輪詢時間",
+          "wechat.error": "錯誤",
+          "wechat.notLoggedIn": "未登入",
+          "wechat.notPolled": "未輪詢",
+          "wechat.refreshLogin": "刷新登入",
+          "wechat.manualPoll": "手動輪詢",
+          "wechat.deactivate": "停用",
+          "wechat.copyQr": "複製二維碼",
+          "wechat.saveQr": "儲存二維碼",
+          "wechat.share": "Share",
+          "wechat.cancel": "Cancel",
+          "wechat.noQr": "目前沒有可分享的二維碼。",
+          "wechat.copySuccess": "已複製到剪貼簿",
+          "wechat.copyFailed": "複製失敗，請重試",
+          "wechat.deleteConfirm": "確認停用這個微信機器人？",
+          "wechat.deleteMessage": "停用後，這個機器人將從目前管理列表中移除。",
+          "wechat.pollDone": "輪詢完成：updates={updates}, handled={handled}, skipped={skipped}",
+          "ilink.waiting_scan": "等待掃碼",
+          "ilink.scanned": "已掃碼，等待確認",
+          "ilink.confirmed": "已接入",
+          "ilink.online": "在線",
+          "ilink.expired": "已過期",
+          "ilink.deleted": "已停用",
+          "health.checking": "檢查登入中",
+          "health.unavailable": "服務不可用"
+        }
+      };
+
+      const icons = {
+        files: '<svg viewBox="0 0 24 24" fill="none"><path d="M4 6.5A2.5 2.5 0 0 1 6.5 4H10l2 2h5.5A2.5 2.5 0 0 1 20 8.5v8A2.5 2.5 0 0 1 17.5 19h-11A2.5 2.5 0 0 1 4 16.5v-10Z" stroke-width="1.8" stroke-linejoin="round"/></svg>',
+        skills: '<svg viewBox="0 0 24 24" fill="none"><path d="M9 4h6v4l4-1v6h-4v7H9v-7H5V7l4 1V4Z" stroke-width="1.8" stroke-linejoin="round"/></svg>',
+        templates: '<svg viewBox="0 0 24 24" fill="none"><path d="M7 4h10a2 2 0 0 1 2 2v14H7a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2Z" stroke-width="1.8"/><path d="M9 8h6M9 12h6M9 16h4" stroke-width="1.8" stroke-linecap="round"/></svg>',
+        wechat: '<svg viewBox="0 0 24 24" fill="none"><path d="M8.5 16.5 5 19v-3.5A6 6 0 1 1 18 10" stroke-width="1.8" stroke-linejoin="round"/><path d="M13 15a4.5 4.5 0 0 0 6 4l2 1.5v-2.4A4.5 4.5 0 1 0 13 15Z" stroke-width="1.8" stroke-linejoin="round"/></svg>',
+        eye: '<svg viewBox="0 0 24 24" fill="none"><path d="M3 12s3.2-5.5 9-5.5S21 12 21 12s-3.2 5.5-9 5.5S3 12 3 12Z" stroke-width="1.8" stroke-linejoin="round"/><path d="M12 14.5a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5Z" stroke-width="1.8"/></svg>',
+        preview: '<svg viewBox="0 0 24 24" fill="none"><path d="M5 5h14v14H5V5Z" stroke-width="1.8" stroke-linejoin="round"/><path d="M9 9h6M9 13h4" stroke-width="1.8" stroke-linecap="round"/></svg>',
+        external: '<svg viewBox="0 0 24 24" fill="none"><path d="M14 5h5v5M19 5l-8 8" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M19 14v3.5A1.5 1.5 0 0 1 17.5 19h-11A1.5 1.5 0 0 1 5 17.5v-11A1.5 1.5 0 0 1 6.5 5H10" stroke-width="1.8" stroke-linecap="round"/></svg>',
+        trash: '<svg viewBox="0 0 24 24" fill="none"><path d="M5 7h14M10 11v6M14 11v6M9 7l1-2h4l1 2M7 7l1 13h8l1-13" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+        file: '<svg viewBox="0 0 24 24" fill="none"><path d="M7 3h7l4 4v14H7V3Z" stroke-width="1.8" stroke-linejoin="round"/><path d="M14 3v5h5M9 13h6M9 17h6" stroke-width="1.8" stroke-linecap="round"/></svg>',
+        image: '<svg viewBox="0 0 24 24" fill="none"><path d="M5 5h14v14H5V5Z" stroke-width="1.8" stroke-linejoin="round"/><path d="m7.5 16 3.5-4 2.5 3 1.7-2 2.8 3.3" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M15.5 9.5h.01" stroke-width="3" stroke-linecap="round"/></svg>',
+        video: '<svg viewBox="0 0 24 24" fill="none"><path d="M5 7h10v10H5V7Z" stroke-width="1.8" stroke-linejoin="round"/><path d="m15 11 4-2.5v7L15 13" stroke-width="1.8" stroke-linejoin="round"/></svg>',
+        voice: '<svg viewBox="0 0 24 24" fill="none"><path d="M12 4a3 3 0 0 0-3 3v5a3 3 0 0 0 6 0V7a3 3 0 0 0-3-3Z" stroke-width="1.8"/><path d="M6 11a6 6 0 0 0 12 0M12 17v3" stroke-width="1.8" stroke-linecap="round"/></svg>',
+        appearance: '<svg viewBox="0 0 24 24" fill="none"><path d="M12 3v2.5M12 18.5V21M4.64 4.64 6.4 6.4M17.6 17.6l1.76 1.76M3 12h2.5M18.5 12H21M4.64 19.36 6.4 17.6M17.6 6.4l1.76-1.76" stroke-width="1.8" stroke-linecap="round"/><path d="M12 16a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z" stroke-width="1.8"/></svg>',
+        language: '<svg viewBox="0 0 24 24" fill="none"><path d="M4 5h9M8.5 5c.6 3.6 2.5 6.4 5.5 8.5M11.5 5c-.8 4.3-3.1 7.4-7 9.5M6 17l3-6M15 19l3.5-8 3.5 8M16.2 16.5h4.6" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+        logout: '<svg viewBox="0 0 24 24" fill="none"><path d="M10 5H6.5A1.5 1.5 0 0 0 5 6.5v11A1.5 1.5 0 0 0 6.5 19H10" stroke-width="1.8" stroke-linecap="round"/><path d="M14 8l4 4-4 4M18 12H9" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+        system: '<svg viewBox="0 0 24 24" fill="none"><path d="M4 5h16v10H4V5Z" stroke-width="1.8" stroke-linejoin="round"/><path d="M9 19h6M12 15v4" stroke-width="1.8" stroke-linecap="round"/></svg>',
+        sun: '<svg viewBox="0 0 24 24" fill="none"><path d="M12 16a4 4 0 1 0 0-8 4 4 0 0 0 0 8ZM12 3v2M12 19v2M4.2 4.2l1.4 1.4M18.4 18.4l1.4 1.4M3 12h2M19 12h2M4.2 19.8l1.4-1.4M18.4 5.6l1.4-1.4" stroke-width="1.8" stroke-linecap="round"/></svg>',
+        moon: '<svg viewBox="0 0 24 24" fill="none"><path d="M20 14.5A7.7 7.7 0 0 1 9.5 4a8.2 8.2 0 1 0 10.5 10.5Z" stroke-width="1.8" stroke-linejoin="round"/></svg>'
+      };
+
+      function currentLanguage() {
+        return document.documentElement.dataset.language || "zh-cn";
+      }
+
+      function t(key, values = {}) {
+        const dictionary = translations[currentLanguage()] || translations["zh-cn"];
+        const fallback = translations["zh-cn"];
+        let text = dictionary[key] || fallback[key] || key;
+        for (const [name, value] of Object.entries(values)) {
+          text = text.replaceAll(`{${name}}`, String(value));
+        }
+        return text;
+      }
+
+      function applyTranslations() {
+        document.title = t("app.title");
+        document.querySelectorAll("[data-i18n]").forEach((node) => {
+          node.textContent = t(node.dataset.i18n);
+        });
+        document.querySelectorAll("[data-i18n-placeholder]").forEach((node) => {
+          node.setAttribute("placeholder", t(node.dataset.i18nPlaceholder));
+        });
+        document.querySelectorAll("[data-i18n-title]").forEach((node) => {
+          node.setAttribute("title", t(node.dataset.i18nTitle));
+        });
+        document.querySelectorAll("[data-i18n-aria-label]").forEach((node) => {
+          node.setAttribute("aria-label", t(node.dataset.i18nAriaLabel));
+        });
+        document.querySelectorAll("[data-i18n-value-default]").forEach((node) => {
+          const previous = node.dataset.previousDefaultValue || node.getAttribute("value") || "";
+          if (!node.value || node.value === previous) {
+            node.value = t(node.dataset.i18nValueDefault);
+          }
+          node.dataset.previousDefaultValue = t(node.dataset.i18nValueDefault);
+        });
+      }
+
+      function refreshLocalizedViews() {
+        if ($("files-body").children.length || fileItems.length) {
+          renderFiles(fileItems);
+        }
+        if ($("skills-body").children.length || skillItems.length) {
+          renderSkills();
+        }
+        if ($("reports-body").children.length) {
+          loadReports().catch((error) => console.error("Failed to localize reports", error));
+        }
+        if ($("templates").children.length) {
+          loadTemplates().catch((error) => console.error("Failed to localize templates", error));
+        }
+        if ($("ilink-bots").children.length) {
+          loadIlinkBots({ quiet: true }).catch((error) => console.error("Failed to localize iLink bots", error));
+        }
+        if (currentIlinkSession) {
+          renderIlinkSession(currentIlinkSession);
+        } else if ($("create-ilink-session")) {
+          renderIlinkConnectDefault();
+        }
+      }
+
+      function startLoading() {
+        window.clearTimeout(loadingTimer);
+        $("loading-bar").classList.remove("done");
+        $("loading-bar").classList.add("active");
+      }
+
+      function finishLoading() {
+        $("loading-bar").classList.add("done");
+        loadingTimer = window.setTimeout(() => {
+          $("loading-bar").classList.remove("active", "done");
+        }, 260);
+      }
+
+      function initPreferences() {
+        const theme = localStorage.getItem("weimo-theme") || "system";
+        const legacyFont = localStorage.getItem("weimo-font");
+        const language = localStorage.getItem("weimo-language") || legacyFont || "zh-cn";
+        applyThemePreference(["system", "light", "dark"].includes(theme) ? theme : "system");
+        applyLanguagePreference(["zh-cn", "en", "zh-tw"].includes(language) ? language : "zh-cn");
+        themeMediaQuery.addEventListener("change", () => {
+          if ((document.documentElement.dataset.themePreference || "system") === "system") {
+            applyThemePreference("system");
+          }
+        });
+      }
+
+      function applyThemePreference(value) {
+        const resolved = value === "system" ? (themeMediaQuery.matches ? "dark" : "light") : value;
+        document.documentElement.dataset.theme = resolved;
+        document.documentElement.dataset.themePreference = value;
+        localStorage.setItem("weimo-theme", value);
+        renderPreferenceState();
+      }
+
+      function applyLanguagePreference(value) {
+        document.documentElement.dataset.font = value;
+        document.documentElement.dataset.language = value;
+        document.documentElement.lang = value === "zh-tw" ? "zh-Hant" : value === "en" ? "en" : "zh-CN";
+        localStorage.setItem("weimo-language", value);
+        localStorage.removeItem("weimo-font");
+        applyTranslations();
+        renderPreferenceState();
+        refreshLocalizedViews();
+      }
+
+      function renderPreferenceState() {
+        const theme = document.documentElement.dataset.themePreference || "system";
+        const language = document.documentElement.dataset.language || "zh-cn";
+        document.querySelectorAll("[data-theme-option]").forEach((button) => {
+          button.querySelector(".menu-check").textContent = button.dataset.themeOption === theme ? "✓" : "";
+        });
+        document.querySelectorAll("[data-language-option]").forEach((button) => {
+          button.querySelector(".menu-check").textContent = button.dataset.languageOption === language ? "✓" : "";
+        });
+      }
+
+      async function api(path, options = {}) {
+        startLoading();
+        const response = await fetch(path, {
+          headers: { "Content-Type": "application/json", ...(options.headers || {}) },
+          ...options
+        });
+        try {
+          if (!response.ok) {
+            throw new Error(await response.text());
+          }
+          return await response.json();
+        } finally {
+          finishLoading();
+        }
+      }
+
+      async function apiQuiet(path, options = {}) {
+        const response = await fetch(path, {
+          headers: { "Content-Type": "application/json", ...(options.headers || {}) },
+          ...options
+        });
+        if (!response.ok) {
+          throw new Error(await response.text());
+        }
+        return response.json();
+      }
+
+      async function apiForm(path, formData) {
+        startLoading();
+        const response = await fetch(path, { method: "POST", body: formData });
+        try {
+          if (!response.ok) {
+            throw new Error(await response.text());
+          }
+          return await response.json();
+        } finally {
+          finishLoading();
+        }
+      }
+
+      function formatDate(value) {
+        if (!value) return "";
+        const locale = currentLanguage() === "en" ? "en-US" : currentLanguage() === "zh-tw" ? "zh-TW" : "zh-CN";
+        return new Date(value).toLocaleString(locale, { hour12: false });
+      }
+
+      async function checkHealth() {
+        try {
+          const me = await api("/auth/me");
+          await api("/health");
+          renderCurrentUser(me);
+        } catch (error) {
+          if (String(error.message).includes("Admin login required")) {
+            window.location.href = "/login";
+          return;
+        }
+          $("health-text").textContent = t("health.unavailable");
+      }
+      }
+
+      function renderCurrentUser(user) {
+        const username = user.username || "admin";
+        $("health-text").removeAttribute("data-i18n");
+        $("health-text").textContent = username;
+        $("user-avatar").textContent = buildInitials(username);
+      }
+
+      function buildInitials(value) {
+        const text = String(value || "admin").trim();
+        const words = text.match(/[A-Za-z0-9]+/g);
+        if (words?.length) {
+          return words
+            .slice(0, 2)
+            .map((word) => word[0])
+            .join("")
+            .toUpperCase();
+        }
+        return text.slice(0, 2).toUpperCase() || "AD";
+      }
+
+      function toggleUserMenu(force) {
+        const menu = $("user-menu");
+        const open = typeof force === "boolean" ? force : !menu.classList.contains("open");
+        menu.classList.toggle("open", open);
+        $("user-card").setAttribute("aria-expanded", String(open));
+        if (!open) {
+          togglePreferenceSubmenu("", false);
+        }
+      }
+
+      function togglePreferenceSubmenu(name, force) {
+        ["theme", "language"].forEach((key) => {
+          const submenu = $(`${key}-submenu`);
+          if (!submenu) return;
+          const open = key === name && (typeof force === "boolean" ? force : !submenu.classList.contains("open"));
+          submenu.classList.toggle("open", open);
+        });
+      }
+
+      async function loadReports() {
+        const keyword = $("report-keyword").value.trim();
+        const params = new URLSearchParams();
+        if (keyword) params.set("keyword", keyword);
+        const data = await api(`/admin/reports?${params.toString()}`);
+        const body = $("reports-body");
+        const mobile = $("reports-mobile");
+        body.innerHTML = "";
+        mobile.innerHTML = "";
+        $("reports-empty").hidden = data.items.length > 0;
+        for (const report of data.items) {
+          const row = document.createElement("tr");
+          row.innerHTML = `
+            <td><strong>${escapeHtml(report.title)}</strong><div class="muted">${escapeHtml(report.templateName || "")}</div></td>
+            <td>${escapeHtml(report.memberName || "")}</td>
+            <td>${escapeHtml(report.projectName || "")}</td>
+            <td class="summary">${escapeHtml(report.summary || "")}</td>
+            <td>${formatDate(report.createdAt)}</td>
+            <td>
+              <div class="toolbar">
+                <a href="${report.downloadUrl}" target="_blank" rel="noreferrer">${t("common.download")}</a>
+                <button class="danger" data-delete-report="${report.id}" data-delete-report-name="${escapeHtml(report.title)}">${t("common.delete")}</button>
+              </div>
+            </td>
+          `;
+          body.appendChild(row);
+        }
+        renderMobileReports(data.items || []);
+        document.querySelectorAll("[data-delete-report]").forEach((button) => {
+          button.addEventListener("click", () => deleteReport(button.dataset.deleteReport, button.dataset.deleteReportName));
+        });
+      }
+
+      function renderMobileReports(items) {
+        const mobile = $("reports-mobile");
+        mobile.innerHTML = items
+          .map(
+            (report) => `
+              <article class="mobile-card">
+                <div>
+                  <div class="mobile-card-title">${escapeHtml(report.title)}</div>
+                  <div class="mobile-card-meta">
+                    <span>${escapeHtml(report.memberName || "")}</span>
+                    <span>${escapeHtml(report.projectName || "")}</span>
+                    <span>${formatDate(report.createdAt)}</span>
+                  </div>
+                </div>
+                ${report.summary ? `<div class="mobile-card-summary">${escapeHtml(report.summary)}</div>` : ""}
+                <div class="mobile-card-actions">
+                  <a class="icon-btn" href="${report.downloadUrl}" target="_blank" rel="noreferrer" title="${t("common.download")}" aria-label="${t("common.download")}">${icons.external}</a>
+                  <button class="icon-btn danger" data-delete-report="${report.id}" data-delete-report-name="${escapeHtml(report.title)}" title="${t("common.delete")}" aria-label="${t("common.delete")}">${icons.trash}</button>
+                </div>
+              </article>
+            `
+          )
+          .join("");
+      }
+
+      async function deleteReport(id, name) {
+        const confirmed = await showConfirmDialog({
+          title: t("confirm.deleteTitle"),
+          message: t("reports.deleteMessage"),
+          target: name || t("media.report"),
+          confirmText: t("common.delete")
+        });
+        if (!confirmed) return;
+        await api(`/admin/reports/${encodeURIComponent(id)}`, { method: "DELETE" });
+        await loadReports();
+      }
+
+      async function loadFiles(options = {}) {
+        const append = options?.append === true;
+        const params = new URLSearchParams();
+        const keyword = $("file-keyword").value.trim();
+        const mediaType = $("file-type-filter").value;
+        if (keyword) params.set("q", keyword);
+        if (mediaType && mediaType !== "any") params.set("mediaType", mediaType);
+        params.set("limit", String(filePagination.limit));
+        params.set("offset", String(append ? filePagination.offset : 0));
+        const data = await api(`/admin/media?${params.toString()}`);
+        fileItems = append ? [...fileItems, ...(data.items || [])] : data.items || [];
+        filePagination = {
+          limit: data.pagination?.limit || filePagination.limit,
+          offset: (data.pagination?.offset || 0) + (data.items || []).length,
+          hasMore: Boolean(data.pagination?.hasMore)
+        };
+        renderFiles(fileItems);
+      }
+
+      function renderFiles(items) {
+        const body = $("files-body");
+        body.innerHTML = "";
+        $("files-empty").hidden = items.length > 0;
+        $("load-more-files").hidden = !filePagination.hasMore;
+        if (!items.length) {
+          $("file-detail").innerHTML = `<div class="empty">${t("files.noMatch")}</div>`;
+          $("files-mobile").innerHTML = "";
+          closeDetailDrawers();
+          return;
+        }
+        for (const item of items) {
+          const row = document.createElement("tr");
+          row.innerHTML = `
+            <td>
+              <div class="file-name">${escapeHtml(item.fileName)}</div>
+              <div class="muted">${escapeHtml(item.caption || item.storagePath || "")}</div>
+            </td>
+            <td><span class="badge">${escapeHtml(formatMediaType(item.mediaType, item.kind))}</span></td>
+            <td>${renderSourceBadge(item.source)}</td>
+            <td>${escapeHtml(item.userName || item.wechatUserId || "")}</td>
+            <td>${formatDate(item.createdAt)}</td>
+            <td class="action-cell">
+              <div class="action-bar">
+                <button class="icon-btn" data-view-file="${item.kind}:${item.id}" title="${t("common.view")}" aria-label="${t("common.view")}">${icons.eye}</button>
+                <button class="icon-btn" data-preview-file="${item.kind}:${item.id}" title="${t("common.preview")}" aria-label="${t("common.preview")}">${icons.preview}</button>
+                ${item.publicUrl ? `<a class="icon-btn" href="${escapeHtml(item.publicUrl)}" target="_blank" rel="noreferrer" title="${t("common.open")}" aria-label="${t("common.open")}">${icons.external}</a>` : ""}
+                <button class="icon-btn danger" data-delete-file="${item.kind}:${item.id}" title="${t("common.delete")}" aria-label="${t("common.delete")}">${icons.trash}</button>
+              </div>
+            </td>
+          `;
+          body.appendChild(row);
+        }
+        renderMobileFiles(items);
+        document.querySelectorAll("[data-view-file]").forEach((button) => {
+          button.addEventListener("click", () => {
+            const [kind, id] = button.dataset.viewFile.split(":");
+            const item = fileItems.find((candidate) => candidate.kind === kind && candidate.id === id);
+            if (item) renderFileDetail(item, { openDrawer: true });
+          });
+        });
+        document.querySelectorAll("[data-delete-file]").forEach((button) => {
+          button.addEventListener("click", () => deleteFile(button.dataset.deleteFile));
+        });
+        document.querySelectorAll("[data-preview-file]").forEach((button) => {
+          button.addEventListener("click", () => previewFile(button.dataset.previewFile));
+        });
+        renderFileDetail(items[0], { openDrawer: false });
+      }
+
+      function renderMobileFiles(items) {
+        $("files-mobile").innerHTML = items
+          .map(
+            (item) => `
+              <article class="mobile-card">
+                <div>
+                  <div class="mobile-card-title">${escapeHtml(item.fileName)}</div>
+                  <div class="mobile-card-meta">
+                    <span class="badge">${escapeHtml(formatMediaType(item.mediaType, item.kind))}</span>
+                    ${renderSourceBadge(item.source)}
+                    <span>${formatDate(item.createdAt)}</span>
+                  </div>
+                </div>
+                <div class="mobile-card-summary">${escapeHtml(item.caption || item.storagePath || t("common.noDescription"))}</div>
+                <div class="mobile-card-meta">
+                  <span>${escapeHtml(item.userName || item.wechatUserId || "")}</span>
+                  <span>${formatFileSize(item.fileSize)}</span>
+                </div>
+                <div class="mobile-card-actions">
+                  <button class="icon-btn" data-view-file="${item.kind}:${item.id}" title="${t("common.view")}" aria-label="${t("common.view")}">${icons.eye}</button>
+                  <button class="icon-btn" data-preview-file="${item.kind}:${item.id}" title="${t("common.preview")}" aria-label="${t("common.preview")}">${icons.preview}</button>
+                  ${item.publicUrl ? `<a class="icon-btn" href="${escapeHtml(item.publicUrl)}" target="_blank" rel="noreferrer" title="${t("common.open")}" aria-label="${t("common.open")}">${icons.external}</a>` : ""}
+                  <button class="icon-btn danger" data-delete-file="${item.kind}:${item.id}" title="${t("common.delete")}" aria-label="${t("common.delete")}">${icons.trash}</button>
+                </div>
+              </article>
+            `
+          )
+          .join("");
+      }
+
+      async function previewFile(value) {
+        const [kind, id] = value.split(":");
+        const item = fileItems.find((candidate) => candidate.kind === kind && candidate.id === id);
+        $("file-preview-title").textContent = item?.fileName || t("files.previewTitle");
+        $("file-preview-note").textContent = item ? `${formatMediaType(item.mediaType, item.kind)} · ${formatDate(item.createdAt)}` : "";
+        $("file-preview-content").innerHTML = `<div class="empty">${t("common.loading")}</div>`;
+        $("file-preview-dialog").showModal();
+        const preview = await api(`/admin/media/${encodeURIComponent(kind)}/${encodeURIComponent(id)}/preview`);
+        $("file-preview-title").textContent = preview.fileName || item?.fileName || t("files.previewTitle");
+        $("file-preview-content").innerHTML = renderFilePreviewContent(preview);
+      }
+
+      function renderFilePreviewContent(preview) {
+        const publicUrl = escapeHtml(preview.publicUrl || "");
+        const fileName = escapeHtml(preview.fileName || "");
+        if (preview.type === "image") {
+          return `<img src="${publicUrl}" alt="${fileName}" />`;
+        }
+        if (preview.type === "html") {
+          return `<article class="doc-preview">${preview.html || `<p>${t("templates.noPreview")}</p>`}</article>`;
+        }
+        if (preview.type === "pdf") {
+          return `<iframe class="file-preview-frame" src="${publicUrl}" title="${fileName}"></iframe>`;
+        }
+        if (preview.type === "video") {
+          return `<video controls src="${publicUrl}"></video>`;
+        }
+        if (preview.type === "audio") {
+          return `<div class="file-preview-card">${renderFileTypeIcon(fileName)}<strong>${fileName}</strong><audio controls src="${publicUrl}"></audio></div>`;
+        }
+        if (preview.type === "text") {
+          return `<pre class="file-preview-text">${escapeHtml(preview.text || "")}</pre>`;
+        }
+        const message = preview.type === "missing" ? t("files.previewMissing") : t("files.previewUnsupported");
+        return `
+          <div class="file-preview-card">
+            ${renderFileTypeIcon(fileName)}
+            <strong>${fileName}</strong>
+            <div class="muted">${escapeHtml(message)}</div>
+            ${publicUrl ? `<a class="icon-btn" href="${publicUrl}" target="_blank" rel="noreferrer" title="${t("common.open")}" aria-label="${t("common.open")}">${icons.external}</a>` : ""}
+          </div>
+        `;
+      }
+
+      function renderFileTypeIcon(fileName) {
+        const officeIconUrl = getOfficeIconUrl(fileName);
+        return officeIconUrl
+          ? `<img class="office-file-icon" src="${officeIconUrl}" alt="" />`
+          : `<span class="generic-file-icon">${icons.file}</span>`;
+      }
+
+      async function deleteFile(value) {
+        const [kind, id] = value.split(":");
+        const item = fileItems.find((candidate) => candidate.kind === kind && candidate.id === id);
+        const name = item?.fileName || t("media.file");
+        const confirmed = await showConfirmDialog({
+          title: t("confirm.deleteTitle"),
+          message: t("files.deleteMessage"),
+          target: name,
+          confirmText: t("common.delete")
+        });
+        if (!confirmed) return;
+        await api(`/admin/media/${encodeURIComponent(kind)}/${encodeURIComponent(id)}`, { method: "DELETE" });
+        showToast(t("files.deleted"));
+        await loadFiles();
+      }
+
+      function renderFileDetail(item, options = {}) {
+        const metadata = JSON.stringify(compactMetadata(item.metadata || {}), null, 2);
+        $("file-detail").innerHTML = `
+          ${renderFilePreview(item)}
+          <div class="detail-kv">
+            <label>${t("files.fileName")}</label>
+            <div>${escapeHtml(item.fileName)}</div>
+          </div>
+          <div class="toolbar">
+            <span class="badge">${escapeHtml(formatMediaType(item.mediaType, item.kind))}</span>
+            ${renderSourceBadge(item.source)}
+            <span class="badge ${item.publicUrl ? "ok" : ""}">${item.publicUrl ? t("common.available") : t("common.noPublicUrl")}</span>
+          </div>
+          <div class="detail-kv">
+            <label>${t("files.fileSize")}</label>
+            <div>${formatFileSize(item.fileSize)}</div>
+          </div>
+          <div class="detail-kv">
+            <label>${t("files.sourceUser")}</label>
+            <div>${escapeHtml(item.userName || "")}</div>
+          </div>
+          <div class="detail-kv">
+            <label>${t("files.storagePath")}</label>
+            <div>${escapeHtml(item.storagePath || "")}</div>
+          </div>
+          <div class="detail-kv">
+            <label>${t("files.publicUrl")}</label>
+            <div>${item.publicUrl ? `<a href="${escapeHtml(item.publicUrl)}" target="_blank" rel="noreferrer">${escapeHtml(item.publicUrl)}</a>` : t("common.none")}</div>
+          </div>
+          <div class="detail-kv">
+            <label>${t("files.description")}</label>
+            <div>${escapeHtml(item.caption || t("common.none"))}</div>
+          </div>
+          <div class="detail-kv">
+            <label>${t("files.metadata")}</label>
+            <pre class="schema-box">${escapeHtml(metadata)}</pre>
+          </div>
+          <div class="detail-kv">
+            <label>${t("common.time")}</label>
+            <div>${t("common.created")}：${formatDate(item.createdAt)}<br />${t("common.updated")}：${formatDate(item.updatedAt)}</div>
+          </div>
+        `;
+        if (options.openDrawer) {
+          openDetailDrawer("file");
+        }
+      }
+
+      function renderFilePreview(item) {
+        if (item.mediaType === "image" && item.publicUrl) {
+          return `<div class="preview-box"><img src="${escapeHtml(item.publicUrl)}" alt="${escapeHtml(item.fileName)}" /></div>`;
+        }
+        const officeIconUrl = getOfficeIconUrl(item.fileName);
+        const typeName = formatFileTypeTitle(item);
+        const iconMarkup = officeIconUrl
+          ? `<img class="office-file-icon" src="${officeIconUrl}" alt="${escapeHtml(typeName)}" />`
+          : `<span class="generic-file-icon">${icons[item.mediaType] || icons.file}</span>`;
+        return `
+          <div class="preview-box">
+            <div class="file-type-preview">
+              ${iconMarkup}
+              <div>
+                <div class="file-type-title">${escapeHtml(typeName)}</div>
+                <div class="file-type-subtitle">${escapeHtml(getFileExtension(item.fileName).toUpperCase() || formatMediaType(item.mediaType, item.kind))}</div>
+              </div>
+            </div>
+          </div>
+        `;
+      }
+
+      async function loadSkills(options = {}) {
+        const data = await api(options.reload ? "/admin/skills/reload" : "/admin/skills", options.reload ? { method: "POST", body: "{}" } : {});
+        skillItems = data.items || [];
+        renderSkills();
+      }
+
+      function renderSkills() {
+        const keyword = $("skill-keyword").value.trim().toLowerCase();
+        const sourceType = $("skill-type-filter").value;
+        const items = skillItems.filter((item) => {
+          const matchesType = sourceType === "all" || item.sourceType === sourceType;
+          const text = `${item.name} ${item.description} ${(item.tools || []).map((tool) => tool.name).join(" ")}`.toLowerCase();
+          return matchesType && (!keyword || text.includes(keyword));
+        });
+        const body = $("skills-body");
+        body.innerHTML = "";
+        $("skills-empty").hidden = items.length > 0;
+        if (!items.length) {
+          $("skill-detail").innerHTML = `<div class="empty">${t("skills.noMatch")}</div>`;
+          $("skills-mobile").innerHTML = "";
+          closeDetailDrawers();
+          return;
+        }
+        for (const item of items) {
+          const row = document.createElement("tr");
+          row.innerHTML = `
+            <td>
+              <div class="skill-name">${escapeHtml(item.name)}</div>
+              <div class="muted">${escapeHtml(item.description || "")}</div>
+            </td>
+            <td>${renderSkillTypeBadge(item.sourceType)}</td>
+            <td>${item.toolCount ?? item.tools?.length ?? 0}</td>
+            <td><span class="badge ok">${item.enabled ? t("skills.loaded") : t("skills.disabled")}</span></td>
+            <td>${formatDate(item.updatedAt)}</td>
+            <td><button data-view-skill="${escapeHtml(item.name)}">${t("common.view")}</button></td>
+          `;
+          body.appendChild(row);
+        }
+        renderMobileSkills(items);
+        document.querySelectorAll("[data-view-skill]").forEach((button) => {
+          button.addEventListener("click", () => {
+            const item = skillItems.find((candidate) => candidate.name === button.dataset.viewSkill);
+            if (item) renderSkillDetail(item, { openDrawer: true });
+          });
+        });
+        renderSkillDetail(items[0], { openDrawer: false });
+      }
+
+      function renderMobileSkills(items) {
+        $("skills-mobile").innerHTML = items
+          .map(
+            (item) => `
+              <article class="mobile-card">
+                <div>
+                  <div class="mobile-card-title">${escapeHtml(item.name)}</div>
+                  <div class="mobile-card-meta">
+                    ${renderSkillTypeBadge(item.sourceType)}
+                    <span class="badge ok">${item.enabled ? t("skills.loaded") : t("skills.disabled")}</span>
+                    <span>${t("skills.toolCount")}：${item.toolCount ?? item.tools?.length ?? 0}</span>
+                  </div>
+                </div>
+                <div class="mobile-card-summary">${escapeHtml(item.description || t("common.noDescription"))}</div>
+                <div class="mobile-card-actions">
+                  <button data-view-skill="${escapeHtml(item.name)}">${t("common.view")}</button>
+                </div>
+              </article>
+            `
+          )
+          .join("");
+      }
+
+      function renderSkillDetail(item, options = {}) {
+        const tools = item.tools || [];
+        $("skill-detail").innerHTML = `
+          <div class="detail-kv">
+            <label>${t("skills.name")}</label>
+            <div class="skill-name">${escapeHtml(item.name)}</div>
+          </div>
+          <div class="toolbar">
+            ${renderSkillTypeBadge(item.sourceType)}
+            <span class="badge ok">${item.enabled ? t("skills.loaded") : t("skills.disabled")}</span>
+            <span class="badge">${t("common.readOnly")}</span>
+          </div>
+          <div class="detail-kv">
+            <label>${t("files.description")}</label>
+            <div>${escapeHtml(item.description || t("common.noDescription"))}</div>
+          </div>
+          <div class="detail-kv">
+            <label>${t("skills.sourcePath")}</label>
+            <div>${escapeHtml(item.sourcePath || t("skills.unknownPath"))}</div>
+          </div>
+          <div class="detail-kv">
+            <label>${t("skills.security")}</label>
+            <div>${item.sourceType === "ai-created" ? t("skills.aiSafety") : t("skills.systemSafety")}</div>
+          </div>
+          <div class="detail-kv">
+            <label>${t("skills.tools")}</label>
+            <div>${tools.length ? tools.map((tool) => `<span class="badge">${escapeHtml(tool.name)}</span>`).join(" ") : t("skills.noTools")}</div>
+          </div>
+          ${tools
+            .map(
+              (tool) => `
+                <div class="detail-kv">
+                  <label>${escapeHtml(tool.name)}</label>
+                  <div>${escapeHtml(tool.description || t("common.noDescription"))}</div>
+                  <pre class="schema-box">${escapeHtml(JSON.stringify(tool.parameters || {}, null, 2))}</pre>
+                </div>
+              `
+            )
+            .join("")}
+        `;
+        if (options.openDrawer) {
+          openDetailDrawer("skill");
+        }
+      }
+
+      async function loadTemplates() {
+        const data = await api("/admin/templates");
+        $("templates").innerHTML = data.items.length
+          ? data.items
+              .map(
+                (item) => `
+                  <div class="item">
+                    <strong>${escapeHtml(item.name)}</strong>
+                    <div class="muted">${escapeHtml(item.description || t("common.noDescription"))}</div>
+                    <div class="muted">${item.isActive ? t("templates.active") : t("templates.inactive")} · ${escapeHtml(item.templateFilePath ? t("templates.uploaded") : t("templates.fallback"))}</div>
+                    <div class="toolbar" style="margin-top: 8px">
+                      <button data-preview-template="${item.id}">${t("common.view")}</button>
+                      <button data-toggle-template="${item.id}" data-active="${item.isActive ? "false" : "true"}">${item.isActive ? t("common.disable") : t("common.enable")}</button>
+                      <button class="danger" data-delete-template="${item.id}">${t("common.delete")}</button>
+                    </div>
+                  </div>
+                `
+              )
+              .join("")
+          : `<span class="muted">${t("templates.empty")}</span>`;
+        document.querySelectorAll("[data-toggle-template]").forEach((button) => {
+          button.addEventListener("click", () =>
+            updateTemplate(button.dataset.toggleTemplate, { isActive: button.dataset.active === "true" })
+          );
+        });
+        document.querySelectorAll("[data-preview-template]").forEach((button) => {
+          button.addEventListener("click", () => previewTemplate(button.dataset.previewTemplate));
+        });
+        document.querySelectorAll("[data-delete-template]").forEach((button) => {
+          button.addEventListener("click", () => deleteTemplate(button.dataset.deleteTemplate));
+        });
+      }
+
+      async function previewTemplate(id) {
+        const data = await api(`/admin/templates/${encodeURIComponent(id)}/preview`);
+        $("template-preview-title").textContent = data.template.name;
+        $("template-preview-note").textContent = data.warnings?.length ? data.warnings.join("；") : t("templates.previewNote");
+        $("template-preview-content").innerHTML = data.html || `<p>${t("templates.noPreview")}</p>`;
+        $("template-preview-dialog").showModal();
+      }
+
+      async function uploadTemplate() {
+        const file = $("template-file").files[0];
+        if (file && !file.name.toLowerCase().endsWith(".docx")) {
+          window.alert(t("templates.docxOnly"));
+          return;
+        }
+        const form = new FormData();
+        form.append("name", $("template-name").value.trim() || t("templates.untitled"));
+        form.append("description", $("template-description").value.trim());
+        if (file) form.append("file", file);
+        await apiForm("/admin/templates", form);
+        $("template-file").value = "";
+        $("template-upload-dialog").close();
+        await loadTemplates();
+      }
+
+      async function loadIlinkBots(options = {}) {
+        const data = await (options.quiet ? apiQuiet : api)("/admin/ilink/bots");
+        $("ilink-bots-title").textContent = `BOTS (${data.items.length})`;
+        $("ilink-bots").innerHTML = data.items.length
+          ? data.items
+              .map(
+                (bot) => `
+                  <div class="item wechat-bot-card">
+                    <div class="wechat-bot-main">
+                      <span class="status-dot ${bot.status === "online" ? "online" : ""}"></span>
+                      <div>
+                        <div class="wechat-bot-id">${escapeHtml(bot.ilinkUserId || bot.name || t("wechat.title"))}</div>
+                        <div class="wechat-bot-meta">
+                          <span>${t("wechat.statusPrefix")}：${escapeHtml(formatIlinkStatus(bot.status))}</span>
+                          <span>${t("wechat.loginTime")}：${bot.loggedInAt ? formatDate(bot.loggedInAt) : t("wechat.notLoggedIn")}</span>
+                          <span>${t("wechat.pollingTime")}：${bot.pollingAt ? formatDate(bot.pollingAt) : t("wechat.notPolled")}</span>
+                          ${bot.lastError ? `<span>${t("wechat.error")}：${escapeHtml(bot.lastError)}</span>` : ""}
+                        </div>
+                      </div>
+                      <div class="wechat-bot-date">${bot.loggedInAt ? formatShortDate(bot.loggedInAt) : ""}</div>
+                    </div>
+                    <div class="wechat-bot-actions">
+                      <button data-refresh-ilink-bot="${bot.id}">${t("wechat.refreshLogin")}</button>
+                      <button data-poll-ilink-bot="${bot.id}">${t("wechat.manualPoll")}</button>
+                      <button class="danger" data-delete-ilink-bot="${bot.id}">${t("wechat.deactivate")}</button>
+                    </div>
+                  </div>
+                `
+              )
+              .join("")
+          : `<span class="muted">${t("wechat.noBots")}</span>`;
+        document.querySelectorAll("[data-refresh-ilink-bot]").forEach((button) => {
+          button.addEventListener("click", () => refreshIlinkBot(button.dataset.refreshIlinkBot));
+        });
+        document.querySelectorAll("[data-poll-ilink-bot]").forEach((button) => {
+          button.addEventListener("click", () => pollIlinkBot(button.dataset.pollIlinkBot));
+        });
+        document.querySelectorAll("[data-delete-ilink-bot]").forEach((button) => {
+          button.addEventListener("click", () => deleteIlinkBot(button.dataset.deleteIlinkBot));
+        });
+      }
+
+      async function createIlinkSession() {
+        stopIlinkSessionAutoRefresh();
+        renderIlinkConnectLoading();
+        const session = await api("/admin/ilink/qr-sessions", {
+          method: "POST",
+          body: JSON.stringify({ name: t("wechat.title") })
+        }).catch((error) => {
+          renderIlinkConnectDefault();
+          throw error;
+        });
+        currentIlinkSessionId = session.id;
+        renderIlinkSession(session);
+        startIlinkSessionAutoRefresh();
+      }
+
+      async function refreshIlinkSession() {
+        if (!currentIlinkSessionId) {
+          return;
+        }
+        const session = await apiQuiet(`/admin/ilink/qr-sessions/${encodeURIComponent(currentIlinkSessionId)}/refresh`, {
+          method: "POST",
+          body: "{}"
+        });
+        renderIlinkSession(session);
+        if (session.status === "confirmed") {
+          stopIlinkSessionAutoRefresh();
+          await loadIlinkBots();
+        } else if (session.status === "expired") {
+          stopIlinkSessionAutoRefresh();
+        }
+      }
+
+      function startIlinkSessionAutoRefresh() {
+        stopIlinkSessionAutoRefresh();
+        ilinkSessionRefreshTimer = window.setInterval(() => {
+          refreshIlinkSession().catch((error) => {
+            console.error("Failed to refresh iLink QR status", error);
+          });
+        }, 3000);
+      }
+
+      function stopIlinkSessionAutoRefresh() {
+        if (ilinkSessionRefreshTimer) {
+          window.clearInterval(ilinkSessionRefreshTimer);
+          ilinkSessionRefreshTimer = 0;
+        }
+      }
+
+      function startIlinkBotsAutoRefresh() {
+        if (ilinkBotsRefreshTimer) {
+          return;
+        }
+        ilinkBotsRefreshTimer = window.setInterval(() => {
+          if ($("module-wechat").classList.contains("active")) {
+            loadIlinkBots({ quiet: true }).catch((error) => {
+              console.error("Failed to refresh iLink bots", error);
+            });
+          }
+        }, 10000);
+      }
+
+      function renderIlinkConnectDefault() {
+        currentIlinkSession = null;
+        currentIlinkSessionId = "";
+        currentIlinkQrValue = "";
+        currentIlinkQrSvg = "";
+        $("wechat-connect-inner").className = "wechat-connect-inner";
+        $("wechat-connect-inner").innerHTML = `
+          <div class="wechat-connect-icon">◎</div>
+          <div class="wechat-connect-title">${t("wechat.connectTitle")}</div>
+          <button id="create-ilink-session" class="primary">Add Bot</button>
+          <div id="ilink-session" class="qr muted wechat-qr"></div>
+        `;
+        $("create-ilink-session").addEventListener("click", createIlinkSession);
+      }
+
+      function renderIlinkConnectLoading() {
+        $("wechat-connect-inner").className = "wechat-connect-inner";
+        $("wechat-connect-inner").innerHTML = `
+          <div class="spinner" aria-label="${t("common.loading")}"></div>
+          <div class="wechat-connect-title">${t("wechat.generating")}</div>
+          <div class="muted">${t("wechat.wait")}</div>
+        `;
+      }
+
+      function renderIlinkSession(session) {
+        currentIlinkSession = session;
+        const statusText = formatIlinkStatus(session.status);
+        currentIlinkQrValue = session.qrcodeContent || session.qrcode || "";
+        currentIlinkQrSvg = session.qrSvg || "";
+        $("wechat-connect-inner").className = "wechat-connect-inner qr-mode";
+        $("wechat-connect-inner").innerHTML = `
+          <div class="wechat-qr-card">${currentIlinkQrSvg}</div>
+          <div class="wechat-connect-note">${t("wechat.scan")}</div>
+          <div class="muted">${t("wechat.statusPrefix")}：${escapeHtml(statusText)}</div>
+          ${session.lastError ? `<div class="muted">${t("wechat.error")}：${escapeHtml(session.lastError)}</div>` : ""}
+          <div class="wechat-share-wrap">
+            <button id="share-ilink-session" class="primary" type="button">${t("wechat.share")}</button>
+            <div id="wechat-share-panel" class="wechat-share-panel" aria-label="${t("wechat.share")}">
+              <button data-share-action="copy-qr" type="button">${t("wechat.copyQr")}</button>
+              <button data-share-action="save" type="button">${t("wechat.saveQr")}</button>
+            </div>
+          </div>
+          <button id="cancel-ilink-session" class="wechat-connect-link">${t("wechat.cancel")}</button>
+        `;
+        $("share-ilink-session").addEventListener("click", (event) => {
+          event.stopPropagation();
+          toggleIlinkSharePanel();
+        });
+        document.querySelectorAll("[data-share-action]").forEach((button) => {
+          button.addEventListener("click", () => handleIlinkShareAction(button.dataset.shareAction));
+        });
+        $("cancel-ilink-session").addEventListener("click", () => {
+          stopIlinkSessionAutoRefresh();
+          renderIlinkConnectDefault();
+        });
+      }
+
+      function toggleIlinkSharePanel(force) {
+        const panel = $("wechat-share-panel");
+        if (!panel) return;
+        const open = typeof force === "boolean" ? force : !panel.classList.contains("open");
+        panel.classList.toggle("open", open);
+      }
+
+      async function handleIlinkShareAction(action) {
+        toggleIlinkSharePanel(false);
+        if (!currentIlinkQrValue && !currentIlinkQrSvg) {
+          window.alert(t("wechat.noQr"));
+          return;
+        }
+        if (action === "save") {
+          await saveIlinkQrCode();
+          return;
+        }
+        if (action === "copy-qr") {
+          await copyText(currentIlinkQrValue, t("wechat.copySuccess"));
+          return;
+        }
+      }
+
+      async function saveIlinkQrCode() {
+        try {
+          const blob = await buildIlinkQrPngBlob();
+          downloadBlob(blob, "wechat-bot-qr.png");
+        } catch (error) {
+          console.warn("PNG QR export failed, saving SVG instead", error);
+          downloadBlob(new Blob([currentIlinkQrSvg], { type: "image/svg+xml" }), "wechat-bot-qr.svg");
+        }
+      }
+
+      async function buildIlinkQrPngBlob() {
+        if (!currentIlinkQrSvg) {
+          throw new Error("Missing QR SVG");
+        }
+        const svgBlob = new Blob([currentIlinkQrSvg], { type: "image/svg+xml" });
+        const url = URL.createObjectURL(svgBlob);
+        try {
+          const image = await loadImage(url);
+          const canvas = document.createElement("canvas");
+          canvas.width = 720;
+          canvas.height = 720;
+          const context = canvas.getContext("2d");
+          context.fillStyle = "#ffffff";
+          context.fillRect(0, 0, canvas.width, canvas.height);
+          context.drawImage(image, 0, 0, canvas.width, canvas.height);
+          return await new Promise((resolve, reject) => {
+            canvas.toBlob((blob) => (blob ? resolve(blob) : reject(new Error("Canvas export failed"))), "image/png");
+          });
+        } finally {
+          URL.revokeObjectURL(url);
+        }
+      }
+
+      function loadImage(url) {
+        return new Promise((resolve, reject) => {
+          const image = new Image();
+          image.onload = () => resolve(image);
+          image.onerror = reject;
+          image.src = url;
+        });
+      }
+
+      function downloadBlob(blob, filename) {
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = filename;
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        window.setTimeout(() => URL.revokeObjectURL(url), 500);
+      }
+
+      async function copyText(value, successMessage) {
+        const text = value || "";
+        let copied = false;
+        if (navigator.clipboard?.writeText && window.isSecureContext) {
+          try {
+            await navigator.clipboard.writeText(text);
+            copied = true;
+          } catch (error) {
+            console.warn("Clipboard API copy failed, trying fallback", error);
+          }
+        }
+        if (!copied) {
+          copied = copyTextFallback(text);
+        }
+        if (!copied) {
+          showToast(t("wechat.copyFailed"), "error");
+          return;
+        }
+        showToast(successMessage);
+      }
+
+      function showToast(message, type = "success") {
+        const toast = $("app-toast");
+        window.clearTimeout(toast.dismissTimer);
+        toast.textContent = message;
+        toast.classList.toggle("error", type === "error");
+        toast.classList.add("show");
+        toast.dismissTimer = window.setTimeout(() => {
+          toast.classList.remove("show");
+        }, 1800);
+      }
+
+      function showConfirmDialog(input) {
+        const dialog = $("confirm-dialog");
+        const target = $("confirm-target");
+        $("confirm-title").textContent = input.title || t("confirm.deleteTitle");
+        $("confirm-message").textContent = input.message || "";
+        $("confirm-submit").textContent = input.confirmText || t("common.delete");
+        $("confirm-cancel").textContent = input.cancelText || t("common.cancel");
+        if (input.target) {
+          target.hidden = false;
+          target.textContent = input.target;
+        } else {
+          target.hidden = true;
+          target.textContent = "";
+        }
+
+        return new Promise((resolve) => {
+          dialog.confirmResolver = resolve;
+          dialog.showModal();
+          $("confirm-cancel").focus();
+        });
+      }
+
+      function closeConfirmDialog(confirmed) {
+        const dialog = $("confirm-dialog");
+        const resolver = dialog.confirmResolver;
+        dialog.confirmResolver = null;
+        if (dialog.open) {
+          dialog.close();
+        }
+        if (resolver) {
+          resolver(Boolean(confirmed));
+        }
+      }
+
+      function copyTextFallback(text) {
+        const textarea = document.createElement("textarea");
+        textarea.value = text;
+        textarea.setAttribute("readonly", "");
+        textarea.style.position = "fixed";
+        textarea.style.left = "-9999px";
+        textarea.style.top = "0";
+        textarea.style.opacity = "0";
+        document.body.appendChild(textarea);
+        textarea.focus();
+        textarea.select();
+        textarea.setSelectionRange(0, textarea.value.length);
+        try {
+          return document.execCommand("copy");
+        } catch (error) {
+          console.warn("Fallback copy failed", error);
+          return false;
+        } finally {
+          textarea.remove();
+        }
+      }
+
+      function formatIlinkStatus(status) {
+        return t(`ilink.${status}`) !== `ilink.${status}` ? t(`ilink.${status}`) : status || "";
+      }
+
+      function formatShortDate(value) {
+        if (!value) return "";
+        const locale = currentLanguage() === "en" ? "en-US" : currentLanguage() === "zh-tw" ? "zh-TW" : "zh-CN";
+        return new Date(value).toLocaleDateString(locale);
+      }
+
+      function compactMetadata(metadata) {
+        const allowedKeys = ["source", "title", "summary", "description", "label", "projectName", "templateName", "status"];
+        const result = {};
+        for (const key of allowedKeys) {
+          const value = metadata?.[key];
+          if (typeof value === "string" && value.trim()) {
+            result[key] = value.length > 120 ? `${value.slice(0, 119)}…` : value;
+          } else if (value !== undefined && value !== null && typeof value !== "object") {
+            result[key] = value;
+          }
+        }
+        return Object.keys(result).length ? result : { note: t("files.metadataEmpty") };
+      }
+
+      function initNavIcons() {
+        document.querySelectorAll("[data-icon]").forEach((node) => {
+          node.innerHTML = icons[node.dataset.icon] || "";
+        });
+      }
+
+      function getFileExtension(fileName) {
+        const match = String(fileName || "").toLowerCase().match(/\.([a-z0-9]+)$/);
+        return match?.[1] || "";
+      }
+
+      function getOfficeIconUrl(fileName) {
+        const ext = getFileExtension(fileName);
+        const supported = new Set(["doc", "docx", "xls", "xlsx", "ppt", "pptx", "one", "vsd", "vsdx"]);
+        return supported.has(ext) ? `${officeIconBaseUrl}/${ext}.svg` : "";
+      }
+
+      function formatFileTypeTitle(item) {
+        const ext = getFileExtension(item.fileName);
+        const titles = {
+          doc: t("fileType.word"),
+          docx: t("fileType.word"),
+          xls: t("fileType.excel"),
+          xlsx: t("fileType.excel"),
+          ppt: t("fileType.powerpoint"),
+          pptx: t("fileType.powerpoint"),
+          pdf: t("fileType.pdf"),
+          zip: t("fileType.zip"),
+          txt: t("fileType.text")
+        };
+        return titles[ext] || formatMediaType(item.mediaType, item.kind);
+      }
+
+      function formatFileSize(value) {
+        const size = Number(value || 0);
+        if (!size) return t("files.unknownSize");
+        if (size < 1024) return `${size} B`;
+        if (size < 1024 * 1024) return `${(size / 1024).toFixed(1)} KB`;
+        return `${(size / 1024 / 1024).toFixed(1)} MB`;
+      }
+
+      function formatMediaType(type, kind) {
+        if (kind === "report") return t("media.report");
+        return (
+          {
+            image: t("media.image"),
+            file: t("media.file"),
+            voice: t("media.voice"),
+            video: t("media.video")
+          }[type] || type || t("media.file")
+        );
+      }
+
+      function renderSourceBadge(source) {
+        const label =
+          {
+            "generated-document": t("source.generatedDocument"),
+            "generated-report": t("source.generatedReport"),
+            "project-report": t("source.projectReport"),
+            "wechat-media": t("source.wechatMedia"),
+            media: t("source.media"),
+            report: t("source.report")
+          }[source] || source || t("source.unknown");
+        return `<span class="badge">${escapeHtml(label)}</span>`;
+      }
+
+      function renderSkillTypeBadge(sourceType) {
+        if (sourceType === "ai-created") {
+          return `<span class="badge ai">${t("skills.aiCreated")}</span>`;
+        }
+        return `<span class="badge">${t("skills.systemSkill")}</span>`;
+      }
+
+      async function refreshIlinkBot(id) {
+        await api(`/admin/ilink/bots/${encodeURIComponent(id)}/refresh`, { method: "POST", body: "{}" });
+        await loadIlinkBots();
+      }
+
+      async function pollIlinkBot(id) {
+        const result = await api(`/admin/ilink/bots/${encodeURIComponent(id)}/poll`, { method: "POST", body: "{}" });
+        window.alert(
+          t("wechat.pollDone", {
+            updates: result.updatesCount,
+            handled: result.handledCount,
+            skipped: result.skippedCount
+          })
+        );
+        await loadIlinkBots();
+      }
+
+      async function deleteIlinkBot(id) {
+        const confirmed = await showConfirmDialog({
+          title: t("confirm.deactivateTitle"),
+          message: t("wechat.deleteMessage"),
+          target: "WeChat Bot",
+          confirmText: t("wechat.deactivate")
+        });
+        if (!confirmed) return;
+        await api(`/admin/ilink/bots/${encodeURIComponent(id)}`, { method: "DELETE" });
+        await loadIlinkBots();
+      }
+
+      function isMobileViewport() {
+        return window.matchMedia("(max-width: 640px)").matches;
+      }
+
+      function detailPanelFor(type) {
+        const detail = type === "skill" ? $("skill-detail") : $("file-detail");
+        return detail?.closest(".detail-panel");
+      }
+
+      function openDetailDrawer(type) {
+        if (!isMobileViewport()) {
+          return;
+        }
+        closeDetailDrawers();
+        const panel = detailPanelFor(type);
+        if (panel) {
+          panel.classList.add("mobile-open");
+        }
+      }
+
+      function closeDetailDrawers() {
+        document.querySelectorAll(".detail-panel.mobile-open").forEach((panel) => {
+          panel.classList.remove("mobile-open");
+        });
+      }
+
+      async function updateTemplate(id, payload) {
+        await api(`/admin/templates/${encodeURIComponent(id)}`, {
+          method: "PATCH",
+          body: JSON.stringify(payload)
+        });
+        await loadTemplates();
+      }
+
+      async function deleteTemplate(id) {
+        const confirmed = await showConfirmDialog({
+          title: t("confirm.deleteTitle"),
+          message: t("templates.deleteMessage"),
+          target: t("templates.title"),
+          confirmText: t("common.delete")
+        });
+        if (!confirmed) return;
+        await api(`/admin/templates/${encodeURIComponent(id)}`, { method: "DELETE" });
+        await loadTemplates();
+      }
+
+      function showModule(name) {
+        startLoading();
+        closeDetailDrawers();
+        document.querySelectorAll(".module").forEach((node) => node.classList.remove("active"));
+        document.querySelectorAll("[data-module-target]").forEach((node) => node.classList.remove("active"));
+        $(`module-${name}`).classList.add("active");
+        document.querySelector(`[data-module-target="${name}"]`).classList.add("active");
+        window.setTimeout(finishLoading, 180);
+      }
+
+      function escapeHtml(value) {
+        return String(value ?? "")
+          .replaceAll("&", "&amp;")
+          .replaceAll("<", "&lt;")
+          .replaceAll(">", "&gt;")
+          .replaceAll('"', "&quot;");
+      }
+
+      document.querySelectorAll("[data-module-target]").forEach((button) => {
+        button.addEventListener("click", () => {
+          showModule(button.dataset.moduleTarget);
+          toggleUserMenu(false);
+        });
+      });
+      document.querySelectorAll("[data-close-detail]").forEach((button) => {
+        button.addEventListener("click", closeDetailDrawers);
+      });
+      $("user-card").addEventListener("click", (event) => {
+        event.stopPropagation();
+        toggleUserMenu();
+      });
+      document.querySelectorAll("[data-submenu-target]").forEach((button) => {
+        button.addEventListener("click", (event) => {
+          event.stopPropagation();
+          togglePreferenceSubmenu(button.dataset.submenuTarget);
+        });
+      });
+      document.querySelectorAll("[data-theme-option]").forEach((button) => {
+        button.addEventListener("click", (event) => {
+          event.stopPropagation();
+          applyThemePreference(button.dataset.themeOption);
+          togglePreferenceSubmenu("", false);
+        });
+      });
+      document.querySelectorAll("[data-language-option]").forEach((button) => {
+        button.addEventListener("click", (event) => {
+          event.stopPropagation();
+          applyLanguagePreference(button.dataset.languageOption);
+          togglePreferenceSubmenu("", false);
+        });
+      });
+      document.addEventListener("click", (event) => {
+        const insidePreferenceMenu =
+          $("user-menu").contains(event.target) ||
+          $("theme-submenu").contains(event.target) ||
+          $("language-submenu").contains(event.target) ||
+          $("user-card").contains(event.target);
+        if (!insidePreferenceMenu) {
+          toggleUserMenu(false);
+        }
+        const sharePanel = $("wechat-share-panel");
+        const shareButton = $("share-ilink-session");
+        if (sharePanel && shareButton && !sharePanel.contains(event.target) && !shareButton.contains(event.target)) {
+          toggleIlinkSharePanel(false);
+        }
+      });
+      $("search-reports").addEventListener("click", () => {
+        showModule("reports");
+        loadReports();
+      });
+      $("refresh-reports").addEventListener("click", loadReports);
+      $("search-files").addEventListener("click", () => {
+        showModule("files");
+        loadFiles();
+      });
+      $("refresh-files").addEventListener("click", loadFiles);
+      $("load-more-files").addEventListener("click", () => loadFiles({ append: true }));
+      $("file-type-filter").addEventListener("change", loadFiles);
+      $("file-keyword").addEventListener("keydown", (event) => {
+        if (event.key === "Enter") {
+          showModule("files");
+          loadFiles();
+        }
+      });
+      $("search-skills").addEventListener("click", renderSkills);
+      $("refresh-skills").addEventListener("click", () => loadSkills());
+      $("reload-skills").addEventListener("click", () => loadSkills({ reload: true }));
+      $("skill-type-filter").addEventListener("change", renderSkills);
+      $("skill-keyword").addEventListener("keydown", (event) => {
+        if (event.key === "Enter") {
+          showModule("skills");
+          renderSkills();
+        }
+      });
+      $("refresh-templates").addEventListener("click", loadTemplates);
+      $("create-ilink-session").addEventListener("click", createIlinkSession);
+      $("open-template-upload").addEventListener("click", () => $("template-upload-dialog").showModal());
+      $("close-template-upload").addEventListener("click", () => $("template-upload-dialog").close());
+      $("upload-template").addEventListener("click", uploadTemplate);
+      $("close-template-preview").addEventListener("click", () => $("template-preview-dialog").close());
+      $("close-file-preview").addEventListener("click", () => $("file-preview-dialog").close());
+      $("confirm-cancel").addEventListener("click", () => closeConfirmDialog(false));
+      $("confirm-submit").addEventListener("click", () => closeConfirmDialog(true));
+      $("confirm-dialog").addEventListener("cancel", (event) => {
+        event.preventDefault();
+        closeConfirmDialog(false);
+      });
+      $("logout").addEventListener("click", async () => {
+        await api("/auth/logout", { method: "POST", body: "{}" });
+        window.location.href = "/login";
+      });
+      $("report-keyword").addEventListener("keydown", (event) => {
+        if (event.key === "Enter") {
+          showModule("reports");
+          loadReports();
+        }
+      });
+      window.addEventListener("resize", () => {
+        if (!isMobileViewport()) {
+          closeDetailDrawers();
+        }
+      });
+
+      initPreferences();
+      initNavIcons();
+      checkHealth();
+      loadReports();
+      loadFiles();
+      loadSkills();
+      loadTemplates();
+      loadIlinkBots();
+      startIlinkBotsAutoRefresh();
+    </script>
+  </body>
+</html>

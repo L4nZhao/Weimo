@@ -1,0 +1,270 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String   @id @default(cuid())
+  wechatUserId String   @unique
+  name         String
+  role         String   @default("member")
+  projectId    String?
+  project      Project? @relation(fields: [projectId], references: [id])
+  reports      Report[]
+  pendingReports PendingReport[]
+  conversationStates WechatConversationState[]
+  chatMessages WechatChatMessage[]
+  bindingSessions WechatBindingSession[]
+  memoryEntries MemoryEntry[]
+  mediaFiles MediaFile[]
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model Project {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  description String?
+  users       User[]
+  reports     Report[]
+  pendingReports PendingReport[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Template {
+  id               String   @id @default(cuid())
+  name             String
+  description      String?
+  templateFilePath String?
+  fieldsJson       String
+  isActive         Boolean  @default(true)
+  reports          Report[]
+  pendingReports   PendingReport[]
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+}
+
+model Report {
+  id                  String       @id @default(cuid())
+  projectId           String?
+  project             Project?     @relation(fields: [projectId], references: [id])
+  templateId          String?
+  template            Template?    @relation(fields: [templateId], references: [id])
+  userId              String
+  user                User         @relation(fields: [userId], references: [id])
+  title               String
+  rawText             String
+  extractedFieldsJson String
+  summary             String
+  keywords            String
+  embeddingJson       String?
+  embeddingModel      String?
+  wordFilePath        String
+  status              String       @default("generated")
+  attachments         Attachment[]
+  createdAt           DateTime     @default(now())
+  updatedAt           DateTime     @updatedAt
+
+  @@index([createdAt])
+  @@index([userId])
+  @@index([projectId])
+  @@index([title])
+  @@index([templateId])
+}
+
+model PendingReport {
+  id                  String   @id @default(cuid())
+  wechatUserId        String   @unique
+  userId              String
+  user                User     @relation(fields: [userId], references: [id])
+  projectId           String?
+  project             Project? @relation(fields: [projectId], references: [id])
+  templateId          String?
+  template            Template? @relation(fields: [templateId], references: [id])
+  title               String?
+  rawText             String
+  extractedFieldsJson String
+  summary             String?
+  keywords            String?
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  @@index([userId])
+  @@map("PendingReportDraft")
+}
+
+model Attachment {
+  id        String   @id @default(cuid())
+  reportId  String
+  report    Report   @relation(fields: [reportId], references: [id])
+  fieldKey  String?
+  fileName  String
+  filePath  String
+  fileType  String
+  createdAt DateTime @default(now())
+}
+
+model WechatConversationState {
+  id               String   @id @default(cuid())
+  wechatUserId     String   @unique
+  userId           String
+  user             User     @relation(fields: [userId], references: [id])
+  mode             String   @default("idle")
+  lastMessage      String?
+  lastContextToken String?
+  lastIlinkBotId   String?
+  lastInboundAt    DateTime?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+}
+
+model Reminder {
+  id          String   @id @default(cuid())
+  wechatUserId String
+  content     String
+  nextFireAt  DateTime
+  recurrence  String
+  status      String
+  createdAt   DateTime @default(now())
+  lastFiredAt DateTime?
+
+  @@index([wechatUserId])
+  @@index([nextFireAt])
+  @@index([status])
+  @@index([status, nextFireAt])
+}
+
+model TodoItem {
+  id           String    @id @default(cuid())
+  wechatUserId String
+  content      String
+  status       String    @default("open")
+  createdAt    DateTime  @default(now())
+  doneAt       DateTime?
+
+  @@index([wechatUserId])
+  @@index([status])
+}
+
+model WechatChatMessage {
+  id           String   @id @default(cuid())
+  wechatUserId String
+  userId       String
+  user         User     @relation(fields: [userId], references: [id])
+  role         String
+  content      String
+  createdAt    DateTime @default(now())
+
+  @@index([wechatUserId, createdAt])
+}
+
+model MemoryEntry {
+  id             String   @id @default(cuid())
+  userId         String
+  user           User     @relation(fields: [userId], references: [id])
+  wechatUserId   String
+  category       String   @default("general")
+  content        String
+  source         String   @default("manual")
+  metadataJson   String?
+  embeddingJson  String?
+  embeddingModel String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@index([wechatUserId, createdAt])
+  @@index([wechatUserId, category, createdAt])
+  @@index([category])
+}
+
+model MediaFile {
+  id             String   @id @default(cuid())
+  userId         String
+  user           User     @relation(fields: [userId], references: [id])
+  wechatUserId   String
+  mediaType      String
+  fileName       String
+  filePath       String
+  publicUrl      String
+  caption        String?
+  mimeType       String?
+  fileSize       Int?
+  embeddingJson  String?
+  embeddingModel String?
+  sourceMessageId String?
+  metadataJson   String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@index([wechatUserId, createdAt])
+  @@index([mediaType])
+  @@index([wechatUserId, mediaType, createdAt])
+  @@index([fileName])
+  @@index([sourceMessageId])
+}
+
+model WechatBindingSession {
+  id              String    @id @default(cuid())
+  token           String    @unique
+  targetName      String?
+  targetRole      String    @default("member")
+  targetProjectId String?
+  wechatUserId    String?
+  userId          String?
+  user            User?     @relation(fields: [userId], references: [id])
+  status          String    @default("pending")
+  expiresAt       DateTime
+  confirmedAt     DateTime?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+}
+
+model IlinkBotQrSession {
+  id            String    @id @default(cuid())
+  name          String
+  status        String    @default("waiting_scan")
+  qrcode        String
+  qrcodeContent String?
+  botId         String?
+  lastError     String?
+  expiresAt     DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+}
+
+model IlinkBotState {
+  id             String   @id @default(cuid())
+  name           String
+  status         String   @default("online")
+  qrcode         String?
+  qrcodeContent  String?
+  botToken       String?
+  ilinkBotId     String?
+  ilinkUserId    String?
+  baseUrl        String?
+  updatesBuf     String?
+  loggedInAt     DateTime?
+  pollingAt      DateTime?
+  lastError      String?
+  processedMessages IlinkProcessedMessage[]
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@index([status])
+  @@index([loggedInAt])
+}
+
+model IlinkProcessedMessage {
+  id        String        @id @default(cuid())
+  botId     String
+  bot       IlinkBotState @relation(fields: [botId], references: [id])
+  messageId String
+  createdAt DateTime      @default(now())
+
+  @@unique([botId, messageId])
+}

@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-labelledby="title desc">
+  <title id="title">Project Report Assistant Icon</title>
+  <desc id="desc">A monochrome app icon: black rounded square with a white chat bubble and typing dots.</desc>
+  <rect width="64" height="64" rx="14" fill="#0d0d0d" />
+  <path
+    d="M32 15c-10.5 0-19 6.9-19 15.4 0 4.9 2.8 9.2 7.2 12v6.2c0 1.1 1.2 1.8 2.2 1.2l6.6-4.1c1 .1 2 .2 3 .2 10.5 0 19-6.9 19-15.5S42.5 15 32 15z"
+    fill="#ffffff"
+  />
+  <circle cx="24" cy="30.5" r="2.6" fill="#0d0d0d" />
+  <circle cx="32" cy="30.5" r="2.6" fill="#0d0d0d" opacity="0.65" />
+  <circle cx="40" cy="30.5" r="2.6" fill="#0d0d0d" opacity="0.35" />
+</svg>
