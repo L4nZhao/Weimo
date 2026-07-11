@@ -64,9 +64,9 @@ Weimo 不内置任何模型，需自备 **OpenAI 兼容** 的 API。最小可运
 # 对话与路由（任何 OpenAI 兼容服务商）
 LLM_API_KEY=sk-xxxx
 LLM_BASE_URL=https://api.your-provider.com/v1
-LLM_MODEL=gpt-4o-mini
+LLM_MODEL=
 
-# 向量检索（阿里云百炼，用于媒体/记忆语义搜索）
+# 向量检索（阿里云百炼等，用于媒体/记忆语义搜索）
 DASHSCOPE_API_KEY=sk-xxxx
 ```
 

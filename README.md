@@ -64,9 +64,9 @@ Weimo ships with no model. Any **OpenAI-compatible** API works. Minimal config â
 # Chat & routing (any OpenAI-compatible provider)
 LLM_API_KEY=sk-xxxx
 LLM_BASE_URL=https://api.your-provider.com/v1
-LLM_MODEL=gpt-4o-mini
+LLM_MODEL=
 
-# Embeddings for semantic search (Alibaba DashScope)
+# Embeddings for semantic search (Alibaba DashScope or others)
 DASHSCOPE_API_KEY=sk-xxxx
 ```
 
