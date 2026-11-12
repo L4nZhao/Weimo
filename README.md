@@ -115,3 +115,7 @@ npm test   # tsc build + 41 integration tests (fully mocked, no real API keys ne
 ## License
 
 [MIT](LICENSE)
+
+## Contributor guide
+
+[Project layout, development commands, validation, and contribution notes](docs/project-guide.md)
